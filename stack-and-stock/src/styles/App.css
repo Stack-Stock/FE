@@ -1,18 +1,19 @@
 /* 폰트 설정 (갈무리9) */
 @font-face {
   font-family: 'Galmuri9';
-  src: url('https://cdn.jsdelivr.net/gh/Dalgona/Galmuri9/dist/Galmuri9.woff2') format('woff2');
+  src: url('https://cdn.jsdelivr.net/npm/galmuri@1.0.1/dist/Galmuri9.woff2') format('woff2');
 }
 
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-  font-family: 'Galmuri9', sans-serif;
+  /* 모든 글씨체에 레트로 폰트 적용 */
+  font-family: 'Galmuri9', sans-serif !important;
 }
 
 body {
-  background-color: #1a1a1a; /* 게임 밖 배경색 */
+  background-color: #1a1a1a;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -20,7 +21,6 @@ body {
   overflow: hidden;
 }
 
-/* 게임 메인 컨테이너: 1280x720 고정 */
 .game-container {
   width: 1280px;
   height: 720px;
@@ -29,7 +29,6 @@ body {
   overflow: hidden;
   box-shadow: 0 0 50px rgba(0,0,0,0.5);
   border: 4px solid #333;
-  /* 도트 이미지 최적화 */
   image-rendering: pixelated;
 }
 
@@ -57,4 +56,83 @@ body {
   height: 100%;
   display: flex;
   flex-direction: column;
+}
+
+.intro-container {
+  width: 100%;
+  height: 100%;
+  background: black;
+  position: relative;
+}
+
+.scene-display {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.base-img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block; /* 이미지가 영역을 차지하도록 보장 */
+}
+
+/* 대사창 스타일 수정 */
+.dialog-box {
+  position: absolute;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 1000px;
+  height: 150px;
+  background: rgba(0, 0, 0, 0.85);
+  border: 4px solid white;
+  padding: 25px 30px;
+  cursor: pointer;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.dialog-text {
+  color: white; /* 텍스트 색상을 반드시 흰색으로 지정 */
+  font-size: 22px;
+  line-height: 1.6;
+  image-rendering: pixelated;
+  -webkit-font-smoothing: none;
+  font-smooth: never;
+}
+
+/* 클릭하여 계속 - 하얀색, 작게, 우측 하단 */
+.click-hint {
+  position: absolute;
+  bottom: 15px;
+  right: 25px;
+  color: #ffffff !important;
+  font-size: 14px;
+  opacity: 0.9;
+  text-shadow: 1px 1px 2px #000;
+}
+
+/* 먼지 입자 효과 (Dust Particles) */
+.dust-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: url('https://www.transparenttextures.com/patterns/stardust.png');
+  opacity: 0.1;
+  pointer-events: none;
+  animation: drift 20s linear infinite;
+}
+
+@keyframes drift {
+  from { background-position: 0 0; }
+  to { background-position: 500px 500px; }
 }
