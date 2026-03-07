@@ -1,15 +1,16 @@
-/* 폰트 설정 (갈무리9) */
-@font-face {
-  font-family: 'Galmuri9';
-  src: url('https://cdn.jsdelivr.net/npm/galmuri@1.0.1/dist/Galmuri9.woff2') format('woff2');
-}
+/* 폰트 패키지 전체 불러오기 */
+@import url('https://cdn.jsdelivr.net/npm/galmuri@latest/dist/galmuri.css');
 
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-  /* 모든 글씨체에 레트로 폰트 적용 */
+  /* 패키지에서 정의된 폰트 패밀리 명칭 사용 */
   font-family: 'Galmuri9', sans-serif !important;
+  /* 텍스트 가독성 최적화 */
+  -webkit-font-smoothing: none;
+  -moz-osx-font-smoothing: grayscale;
+  font-smooth: never;
 }
 
 body {
@@ -135,4 +136,23 @@ body {
 @keyframes drift {
   from { background-position: 0 0; }
   to { background-position: 500px 500px; }
+}
+
+/* Scene 4용 흔들림 애니메이션 */
+@keyframes shake {
+  0% { transform: translate(1px, 1px) rotate(0deg); }
+  10% { transform: translate(-1px, -2px) rotate(-1deg); }
+  20% { transform: translate(-3px, 0px) rotate(1deg); }
+  30% { transform: translate(3px, 2px) rotate(0deg); }
+  40% { transform: translate(1px, -1px) rotate(1deg); }
+  50% { transform: translate(-1px, 2px) rotate(-1deg); }
+  60% { transform: translate(-3px, 1px) rotate(0deg); }
+  70% { transform: translate(3px, 1px) rotate(-1deg); }
+  80% { transform: translate(-1px, -1px) rotate(1deg); }
+  90% { transform: translate(1px, 2px) rotate(0deg); }
+  100% { transform: translate(1px, -2px) rotate(-1deg); }
+}
+
+.shake-effect {
+  animation: shake 0.5s infinite;
 }
