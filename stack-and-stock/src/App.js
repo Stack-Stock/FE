@@ -3,18 +3,24 @@ import { AnimatePresence, motion } from 'framer-motion';
 import './styles/App.css';
 import LoadingScene from './scenes/LoadingScene';
 import MainMenu from './components/MainMenu';
-import IntroStory from './scenes/IntroStory'; // 새로 추가
+import IntroStory from './scenes/IntroStory';
 import GamePlay from './scenes/GamePlay';
 import EndingScene from './scenes/EndingScene';
 
 function App() {
   const [scene, setScene] = useState('LOADING');
+  const [user, setUser] = useState({ name: '조재웅' }); // 임시 유저 데이터
   const [gameData, setGameData] = useState({
     day: 1,
     period: 'MORNING',
     money: 250000,
     energy: 2,
   });
+
+  const handleLogout = () => {
+    alert("로그아웃 되었습니다.");
+    setUser(null); // 세션 비우기 시뮬레이션
+  };
 
   const resetGame = () => {
     setGameData({ day: 1, period: 'MORNING', money: 250000, energy: 2 });
@@ -32,8 +38,11 @@ function App() {
         
         {scene === 'MAIN' && (
           <motion.div key="main" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="scene-wrapper">
-            {/* 시작하기 누르면 INTRO로 이동 */}
-            <MainMenu onStart={() => setScene('INTRO')} />
+            <MainMenu 
+              onStart={() => setScene('INTRO')} 
+              user={user} 
+              onLogout={handleLogout} 
+            />
           </motion.div>
         )}
 

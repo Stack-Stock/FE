@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import '../styles/IntroStory.css';
 
 const IntroStory = ({ onComplete }) => {
   const [scene, setScene] = useState(1);
