@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import '../styles/MainMenu.css';
+import '../styles/UIComponents.css'; // 공통 블록 디자인
+import '../styles/MainMenu.css';    // 메인 전용 위치 설정
 
 const MainMenu = ({ onStart, user, onLogout }) => {
   const bgSequence = [1, 2, 3, 4, 5, 6, 7, 8, 7, 6, 5, 4, 3, 2];
@@ -10,8 +11,6 @@ const MainMenu = ({ onStart, user, onLogout }) => {
   const [logoIndex, setLogoIndex] = useState(0);
   const [prevBgFrame, setPrevBgFrame] = useState(bgSequence[0]);
   const [prevLogoFrame, setPrevLogoFrame] = useState(logoSequence[0]);
-  
-  // 유저 드롭다운 상태
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const publicPath = process.env.PUBLIC_URL;
@@ -26,60 +25,56 @@ const MainMenu = ({ onStart, user, onLogout }) => {
     return () => clearInterval(timer);
   }, [bgIndex, logoIndex]);
 
-  const currentBgFrame = bgSequence[bgIndex];
-  const currentLogoFrame = logoSequence[logoIndex];
-
   return (
     <div className="main-menu-container">
-      {/* [추가] 우측 상단 유저 정보 섹션 */}
+      {/* 1. 배경 & 로고 레이어 (기존 로직 동일) */}
+      <div className="main-bg-layer">
+        <img src={`${publicPath}/assets/main/bg/main_bg_${prevBgFrame}.png`} alt="buffer" className="base-img static-buffer" />
+        <AnimatePresence mode="popLayout">
+          <motion.img key={`bg-${bgSequence[bgIndex]}`} src={`${publicPath}/assets/main/bg/main_bg_${bgSequence[bgIndex]}.png`}
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }} className="base-img" />
+        </AnimatePresence>
+      </div>
+
+      <div className="main-logo-layer">
+        <img src={`${publicPath}/assets/main/logo/main_logo_${prevLogoFrame}.png`} alt="buffer" className="main-title-logo static-buffer" />
+        <AnimatePresence mode="popLayout">
+          <motion.img key={`logo-${logoSequence[logoIndex]}`} src={`${publicPath}/assets/main/logo/main_logo_${logoSequence[logoIndex]}.png`}
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }} className="main-title-logo" />
+        </AnimatePresence>
+      </div>
+
+      {/* 2. 유저 프로필 (우측 상단) */}
       <div className="user-profile-container">
         <div className="profile-block" onClick={() => setIsDropdownOpen(!isDropdownOpen)}>
-          <img src={`${publicPath}/assets/ui/user_icon.png`} alt="user" className="profile-icon-img" 
-               onError={(e) => e.target.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZD0iTTEyIDJDMiAyIDIgMTIgMiAxMnMxMCAxMCAxMCAxMHMxMC0xMCAxMC0xMFMyMiAyIDEyIDJ6bTAgNWMxLjY2IDAgMyAxLjM0IDMgM3MtMS4zNCAzLTMgMy0zLTEuMzQtMy0zIDEuMzQtMyAzLTN6bTAgMTJjLTIuNjcgMC04IDEuMzMtOCA0djJoMTZ2LTJjMC0yLjY3LTUuMzMtNC04LTR6Ii8+PC9zdmc+'}/>
+           <img src={`${publicPath}/assets/ui/user_icon.png`} alt="user" className="profile-icon-img" 
+                onError={(e) => e.target.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZD0iTTEyIDJDMiAyIDIgMTIgMiAxMnMxMCAxMCAxMCAxMHMxMC0xMCAxMC0xMFMyMiAyIDEyIDJ6bTAgNWMxLjY2IDAgMyAxLjM0IDMgM3MtMS4zNCAzLTMgMy0zLTEuMzQtMy0zIDEuMzQtMyAzLTN6bTAgMTJjLTIuNjcgMC04IDEuMzMtOCA0djJoMTZ2LTJjMC0yLjY3LTUuMzMtNC04LTR6Ii8+PC9zdmc+'}/>
         </div>
-        
         <AnimatePresence>
           {isDropdownOpen && (
-            <motion.div 
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="profile-dropdown"
-            >
-              <div className="user-name-tag">{user ? `${user.name} 님` : "로그인이 필요합니다"}</div>
+            <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="profile-dropdown">
+              <div className="user-name-tag">{user ? `${user.name} 님` : "Guest"}</div>
               <button className="logout-btn" onClick={onLogout}>LOGOUT</button>
             </motion.div>
           )}
         </AnimatePresence>
       </div>
 
-      {/* 배경 레이어 */}
-      <div className="main-bg-layer">
-        <img src={`${publicPath}/assets/main/bg/main_bg_${prevBgFrame}.png`} alt="bg-buffer" className="base-img static-buffer" />
-        <AnimatePresence mode="popLayout">
-          <motion.img key={`bg-${currentBgFrame}`} src={`${publicPath}/assets/main/bg/main_bg_${currentBgFrame}.png`}
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            transition={{ duration: 0.3, ease: "linear" }} className="base-img" />
-        </AnimatePresence>
-      </div>
-
-      {/* 로고 레이어 */}
-      <div className="main-logo-layer">
-        <img src={`${publicPath}/assets/main/logo/main_logo_${prevLogoFrame}.png`} alt="logo-buffer" className="main-title-logo static-buffer" />
-        <AnimatePresence mode="popLayout">
-          <motion.img key={`logo-${currentLogoFrame}`} src={`${publicPath}/assets/main/logo/main_logo_${currentLogoFrame}.png`}
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            transition={{ duration: 0.3, ease: "linear" }} className="main-title-logo" />
-        </AnimatePresence>
-      </div>
-
-      {/* UI 버튼 레이어 */}
+      {/* 3. 시작하기 / 이어하기 버튼 (수정된 디자인 적용) */}
       <div className="main-ui-layer">
-        <div className="button-group">
-          <button className="pixel-btn" onClick={onStart}>새 게임 시작하기</button>
-          <button className="pixel-btn" disabled style={{ opacity: 0.5 }}>이어하기 (준비중)</button>
+        <div className="main-button-group">
+          <button className="retro-block menu-btn-custom" onClick={onStart}>
+            [ 새 게임 시작하기 ]
+          </button>
+          <button className="retro-block menu-btn-custom continue-btn" disabled>
+            [ 이어하기 (준비중) ]
+          </button>
         </div>
-        <p className="copyright">© 2026 Team SSAFY 14th. All rights reserved.</p>
+        <p className="copyright" style={{ position: 'absolute', bottom: '20px', left: '50%', transform: 'translateX(-50%)' }}>
+          © 2026 Team SSAFY 14th. All rights reserved.
+        </p>
       </div>
     </div>
   );

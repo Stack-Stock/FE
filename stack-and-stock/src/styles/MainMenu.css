@@ -1,45 +1,92 @@
+/* 메인 메뉴 전체 컨테이너 */
 .main-menu-container {
-  width: 100%;
-  height: 100%;
+  width: 1280px;
+  height: 720px;
   position: relative;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  overflow: hidden;
 }
 
-/* 새 게임 시작하기 버튼 */
-.pixel-btn {
-  background-color: rgba(255, 255, 255, 0.9);
-  border: 4px solid #000;
-  padding: 12px 36px;
-  font-size: 24px;
-  font-weight: bold;
-  cursor: pointer;
-  box-shadow: 6px 6px 0px rgba(0, 0, 0, 0.3);
-}
-
-/* 유저 프로필 영역 */
-.user-profile-container {
+/* 배경 레이어 */
+.main-bg-layer {
   position: absolute;
-  top: 20px;
-  right: 20px;
-  z-index: 100;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
 }
 
-.profile-block {
-  width: 50px;
-  height: 50px;
-  background-color: #fff;
-  border: 4px solid #000;
-  cursor: pointer;
-  clip-path: polygon(20% 0%, 80% 0%, 100% 20%, 100% 80%, 80% 100%, 20% 100%, 0% 80%, 0% 20%);
+/* [로고 레이어: 위치 튀기 방지 고정] */
+.main-logo-layer {
+  position: absolute;
+  left: 30%; 
+  top: -5%; 
+  transform: translateX(-50%);
+  width: 700px;
+  height: 350px; /* 고정 높이 지정으로 레이아웃 튐 방지 */
+  z-index: 5;
+  pointer-events: none;
 }
 
-.profile-dropdown {
-  margin-top: 10px;
-  background-color: rgba(0, 0, 0, 0.9);
-  border: 4px solid #fff;
-  padding: 15px;
-  min-width: 160px;
+/* 애니메이션 및 버퍼 로고 공통 스타일 */
+.main-title-logo {
+  position: absolute !important;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: auto;
+  image-rendering: pixelated;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+/* UI 레이어 (버튼 및 유저 정보) */
+.main-ui-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 10;
+  pointer-events: none;
+}
+
+/* [버튼 그룹 위치 조절] */
+.main-button-group {
+  position: absolute;
+  pointer-events: auto;
+  left: 25%;
+  top: 70%; 
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* [개별 버튼 커스텀 스타일] */
+.menu-btn-custom {
+  width: 320px;
+  height: 90px;
+  font-size: 26px;
+  color: #ffffff;
+  /* UIComponents.css의 retro-block과 함께 쓰입니다 */
+}
+
+.continue-btn {
+  color: #666666;
+}
+
+/* 카피라이트 문구 */
+.copyright {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 14px;
+  pointer-events: none;
 }

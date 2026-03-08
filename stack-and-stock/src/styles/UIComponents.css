@@ -1,0 +1,30 @@
+/* 컨셉 아트 스타일의 공통 레트로 블록 */
+.retro-block {
+  background-color: rgba(68, 68, 88, 0.9); /* 반투명 배경 */
+  border: 4px solid #000000;                  /* 두꺼운 검정 테두리 */
+  box-shadow: 6px 6px 0px rgba(0, 0, 0, 0.3);  /* 도트형 그림자 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.1s;
+  image-rendering: pixelated;
+}
+
+.retro-block:hover {
+  filter: brightness(1.1);
+  transform: translate(-2px, -2px);
+  box-shadow: 8px 8px 0px rgba(0, 0, 0, 0.4);
+}
+
+.retro-block:active {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.5);
+}
+
+/* 비활성화 상태 */
+.retro-block:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  filter: grayscale(1);
+}
