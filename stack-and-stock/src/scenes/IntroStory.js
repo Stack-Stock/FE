@@ -4,30 +4,33 @@ import { motion, AnimatePresence } from 'framer-motion';
 const IntroStory = ({ onComplete }) => {
   const [scene, setScene] = useState(1);
   const [subStep, setSubStep] = useState(1);
-  const [workerFrame, setWorkerFrame] = useState(1); // Scene 3용 프레임
+  const [workerFrame, setWorkerFrame] = useState(1); // 현재 프레임
+  const [prevWorkerFrame, setPrevWorkerFrame] = useState(1); // 버퍼용 이전 프레임
   const [isShaking, setIsShaking] = useState(false); // Scene 4 흔들림 상태
 
   const publicPath = process.env.PUBLIC_URL;
   const imgPath = `${publicPath}/assets/intro`;
 
-  // Scene 3 애니메이션 루프 (5초 간격)
+  // Scene 3 애니메이션 루프
   useEffect(() => {
     let timer;
     if (scene === 3) {
       timer = setInterval(() => {
+        // 현재 프레임을 이전 프레임으로 저장 후 교체
+        setPrevWorkerFrame(workerFrame);
         setWorkerFrame((prev) => (prev === 1 ? 2 : 1));
-      }, 5000);
+      }, 2000); // 5초 간격
     }
     return () => clearInterval(timer);
-  }, [scene]);
+  }, [scene, workerFrame]);
 
-  // Scene 4 진입 시 2초간만 흔들림 효과 적용
+  // Scene 4 진입 시 0.5초간 흔들림 효과
   useEffect(() => {
     if (scene === 4 && subStep === 1) {
       setIsShaking(true);
       const timer = setTimeout(() => {
         setIsShaking(false);
-      }, 500); // 2초 후 흔들림 멈춤
+      }, 500); 
       return () => clearTimeout(timer);
     } else {
       setIsShaking(false);
@@ -40,12 +43,8 @@ const IntroStory = ({ onComplete }) => {
       else { setScene(2); setSubStep(1); }
     } 
     else if (scene === 4) {
-      if (subStep === 1) {
-        setSubStep(2); // 대사는 유지, 이미지만 고개 숙인 버전(tutorial3-2)으로 변경
-      } else {
-        setScene(5);
-        setSubStep(1);
-      }
+      if (subStep === 1) setSubStep(2);
+      else { setScene(5); setSubStep(1); }
     }
     else if (scene === 5) {
       if (subStep === 1) setSubStep(2);
@@ -92,20 +91,36 @@ const IntroStory = ({ onComplete }) => {
         )}
 
         {/* Scene 2: 숫자 강조 */}
-        {scene === 2 && (
-          <img src={`${imgPath}/tutorial1-3.jpg`} alt="amount" className="base-img" />
-        )}
+        {scene === 2 && <img src={`${imgPath}/tutorial1-3.jpg`} alt="amount" className="base-img" />}
 
-        {/* Scene 3: 편의점 알바 루프 */}
+        {/* Scene 3: 편의점 알바 루프 (자연스러운 전환 적용) */}
         {scene === 3 && (
-          <img 
-            src={workerFrame === 1 ? `${imgPath}/tutorial2-1.jpg` : `${imgPath}/tutorial2-2-2.jpg`} 
-            alt="working" 
-            className="base-img" 
-          />
+          <div className="base-img" style={{ position: 'relative' }}>
+            {/* 버퍼 레이어: 깜빡임 방지용 정지 이미지 */}
+            <img 
+              src={prevWorkerFrame === 1 ? `${imgPath}/tutorial2-1.jpg` : `${imgPath}/tutorial2-2-2.jpg`} 
+              alt="buffer" 
+              className="base-img"
+              style={{ position: 'absolute', top: 0, left: 0, zIndex: 0 }}
+            />
+            {/* 애니메이션 레이어: 페이드 인/아웃 */}
+            <AnimatePresence mode="popLayout">
+              <motion.img 
+                key={`worker-${workerFrame}`}
+                src={workerFrame === 1 ? `${imgPath}/tutorial2-1.jpg` : `${imgPath}/tutorial2-2-2.jpg`} 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 1.5, ease: "easeInOut" }} // 부드러운 전환 시간
+                alt="working" 
+                className="base-img" 
+                style={{ position: 'absolute', top: 0, left: 0, zIndex: 1 }}
+              />
+            </AnimatePresence>
+          </div>
         )}
 
-        {/* Scene 4: 무한 반복의 늪 (2초 흔들림 + 고개 숙이기 연출) */}
+        {/* Scene 4: 무한 반복의 늪 */}
         {scene === 4 && (
           <div className={`base-img ${isShaking ? 'shake-effect' : ''}`}>
             <img 
@@ -116,7 +131,7 @@ const IntroStory = ({ onComplete }) => {
           </div>
         )}
 
-        {/* Scene 5: 정보의 발견 */}
+        {/* Scene 5 & 6은 기존과 동일하되 동일한 imgPath 패턴 유지 */}
         {scene === 5 && (
           <>
             <img src={`${imgPath}/tutorial5-1.jpg`} alt="desk" className="base-img" />
@@ -134,7 +149,6 @@ const IntroStory = ({ onComplete }) => {
           </>
         )}
 
-        {/* Scene 6: 노트북 활성화 */}
         {scene === 6 && (
           <>
             <img src={`${imgPath}/tutorial6-1.jpg`} alt="laptop" className="base-img" />
@@ -156,7 +170,7 @@ const IntroStory = ({ onComplete }) => {
       {/* 대사창 */}
       <div className="dialog-box" onClick={handleNext}>
         <motion.p 
-          key={scene} // scene이 바뀔 때만 깜빡임 (subStep 변경 시에는 텍스트 유지)
+          key={scene}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
