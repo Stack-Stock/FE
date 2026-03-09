@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import '../styles/UIComponents.css'; // 공통 블록 디자인
 import '../styles/MainMenu.css';    // 메인 전용 위치 설정
 
-const MainMenu = ({ onStart, user, onLogout }) => {
+const MainMenu = ({ onStart, onTestEnding, user, onLogout }) => {
   const bgSequence = [1, 2, 3, 4, 5, 6, 7, 8, 7, 6, 5, 4, 3, 2];
   const logoSequence = [1, 2, 3, 4, 5, 4, 3, 6, 6, 7];
 
@@ -70,6 +70,14 @@ const MainMenu = ({ onStart, user, onLogout }) => {
           </button>
           <button className="retro-block menu-btn-custom continue-btn" disabled>
             [ 이어하기 (준비중) ]
+          </button>
+          {/* 엔딩 테스트 버튼 추가 */}
+          <button 
+            className="retro-block" 
+            style={{ width: '320px', height: '50px', fontSize: '18px', color: '#aaa', marginTop: '10px' }} 
+            onClick={onTestEnding}
+          >
+            [ 엔딩 테스트 모드 ]
           </button>
         </div>
         <p className="copyright" style={{ position: 'absolute', bottom: '20px', left: '50%', transform: 'translateX(-50%)' }}>

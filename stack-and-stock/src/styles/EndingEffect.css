@@ -1,0 +1,36 @@
+/* 입자 공통 스타일 */
+.particle-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.particle {
+  position: absolute;
+  background: white;
+  border-radius: 50%;
+  opacity: 0.6;
+  animation: fall linear infinite;
+}
+
+@keyframes fall {
+  0% { transform: translateY(-10vh) rotate(0deg); opacity: 0; }
+  20% { opacity: 0.6; }
+  100% { transform: translateY(110vh) rotate(360deg); opacity: 0; }
+}
+
+/* 대성공: 금빛 가루 */
+.gold-particle { background: #ffd700; box-shadow: 0 0 10px #ffd700; }
+
+/* 파산: 붉은 노이즈 */
+.red-glitch {
+  background: #ff4b4b;
+  width: 2px !important;
+  height: 2px !important;
+  border-radius: 0;
+}

@@ -9,7 +9,8 @@ import EndingScene from './scenes/EndingScene';
 
 function App() {
   const [scene, setScene] = useState('LOADING');
-  const [user, setUser] = useState({ name: '조재웅' }); // 임시 유저 데이터
+  const [user, setUser] = useState({ name: '조재웅' });
+  const [testEndingType, setTestEndingType] = useState(null); // 테스트용 엔딩 타입 저장
   const [gameData, setGameData] = useState({
     day: 1,
     period: 'MORNING',
@@ -19,12 +20,19 @@ function App() {
 
   const handleLogout = () => {
     alert("로그아웃 되었습니다.");
-    setUser(null); // 세션 비우기 시뮬레이션
+    setUser(null);
   };
 
   const resetGame = () => {
     setGameData({ day: 1, period: 'MORNING', money: 250000, energy: 2 });
+    setTestEndingType(null);
     setScene('MAIN');
+  };
+
+  // 엔딩 테스트 실행 함수
+  const startEndingTest = (type) => {
+    setTestEndingType(type);
+    setScene('ENDING');
   };
 
   return (
@@ -40,9 +48,26 @@ function App() {
           <motion.div key="main" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="scene-wrapper">
             <MainMenu 
               onStart={() => setScene('INTRO')} 
+              onTestEnding={() => setScene('ENDING_TEST')} // 테스트 씬으로 이동
               user={user} 
               onLogout={handleLogout} 
             />
+          </motion.div>
+        )}
+
+        {/* 엔딩 테스트 메뉴 씬 */}
+        {scene === 'ENDING_TEST' && (
+          <motion.div key="ending_test" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="scene-wrapper">
+            <div style={{ width: '100%', height: '100%', backgroundColor: '#000', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: '15px' }}>
+              <h2 style={{ color: '#fff', marginBottom: '20px' }}>엔딩 결과 테스트 페이지</h2>
+              <button className="retro-block" style={{ width: '400px', height: '50px', color: '#fff' }} onClick={() => startEndingTest('GREAT_SUCCESS')}>1. 대 성공 - 주식 천재</button>
+              <button className="retro-block" style={{ width: '400px', height: '50px', color: '#fff' }} onClick={() => startEndingTest('SUCCESS')}>2. 성공 - 성실한 투자자</button>
+              <button className="retro-block" style={{ width: '400px', height: '50px', color: '#fff' }} onClick={() => startEndingTest('FAIL')}>3. 실패 - 그런 시기도 있는 거죠...</button>
+              <button className="retro-block" style={{ width: '400px', height: '50px', color: '#fff' }} onClick={() => startEndingTest('BANKRUPT')}>4. 대 실패 - 파산</button>
+              <button className="retro-block" style={{ width: '400px', height: '50px', color: '#fff' }} onClick={() => startEndingTest('HIDDEN_STUDY')}>5. 히든 - ㅎㅎ... 공부하기 싫어</button>
+              <button className="retro-block" style={{ width: '400px', height: '50px', color: '#fff' }} onClick={() => startEndingTest('HIDDEN_LUCK')}>6. 히든 - 100억 버튼?!</button>
+              <button className="pixel-btn" style={{ marginTop: '20px' }} onClick={() => setScene('MAIN')}>뒤로 가기</button>
+            </div>
           </motion.div>
         )}
 
@@ -70,7 +95,7 @@ function App() {
 
         {scene === 'ENDING' && (
           <motion.div key="ending" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="scene-wrapper">
-            <EndingScene onRestart={resetGame} />
+            <EndingScene onRestart={resetGame} forcedType={testEndingType} />
           </motion.div>
         )}
       </AnimatePresence>
