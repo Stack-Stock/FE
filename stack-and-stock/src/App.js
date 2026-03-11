@@ -6,11 +6,14 @@ import MainMenu from './components/MainMenu';
 import IntroStory from './scenes/IntroStory';
 import GamePlay from './scenes/GamePlay';
 import EndingScene from './scenes/EndingScene';
+import EventScene from './scenes/EventScene'; // 신규 추가
 
 function App() {
   const [scene, setScene] = useState('LOADING');
   const [user, setUser] = useState({ name: '조재웅' });
-  const [testEndingType, setTestEndingType] = useState(null); // 테스트용 엔딩 타입 저장
+  const [testEndingType, setTestEndingType] = useState(null);
+  const [testEventType, setTestEventType] = useState(null); // 테스트용 이벤트 타입
+  
   const [gameData, setGameData] = useState({
     day: 1,
     period: 'MORNING',
@@ -26,13 +29,24 @@ function App() {
   const resetGame = () => {
     setGameData({ day: 1, period: 'MORNING', money: 250000, energy: 2 });
     setTestEndingType(null);
+    setTestEventType(null);
     setScene('MAIN');
   };
 
-  // 엔딩 테스트 실행 함수
   const startEndingTest = (type) => {
     setTestEndingType(type);
     setScene('ENDING');
+  };
+
+  // 이벤트 테스트 실행 함수
+  const startEventTest = (type) => {
+    // 상태를 먼저 확실히 비운 뒤(null), 다음 틱에서 새로운 타입을 설정하여 
+    // 컴포넌트가 반드시 새 데이터를 읽게 만듭니다.
+    setTestEventType(null); 
+    setTimeout(() => {
+      setTestEventType(type);
+      setScene('EVENT_SCENE');
+    }, 10); 
   };
 
   return (
@@ -48,14 +62,15 @@ function App() {
           <motion.div key="main" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="scene-wrapper">
             <MainMenu 
               onStart={() => setScene('INTRO')} 
-              onTestEnding={() => setScene('ENDING_TEST')} // 테스트 씬으로 이동
+              onTestEnding={() => setScene('ENDING_TEST')}
+              onTestEvent={() => setScene('EVENT_TEST')} // 이벤트 테스트 메뉴로 이동
               user={user} 
               onLogout={handleLogout} 
             />
           </motion.div>
         )}
 
-        {/* 엔딩 테스트 메뉴 씬 */}
+        {/* 엔딩 테스트 메뉴 */}
         {scene === 'ENDING_TEST' && (
           <motion.div key="ending_test" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="scene-wrapper">
             <div style={{ width: '100%', height: '100%', backgroundColor: '#000', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: '15px' }}>
@@ -68,6 +83,31 @@ function App() {
               <button className="retro-block" style={{ width: '400px', height: '50px', color: '#fff' }} onClick={() => startEndingTest('HIDDEN_LUCK')}>6. 히든 - 100억 버튼?!</button>
               <button className="pixel-btn" style={{ marginTop: '20px' }} onClick={() => setScene('MAIN')}>뒤로 가기</button>
             </div>
+          </motion.div>
+        )}
+
+        {/* 이벤트 테스트 메뉴 */}
+        {scene === 'EVENT_TEST' && (
+          <motion.div key="event_test" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="scene-wrapper">
+            <div style={{ width: '100%', height: '100%', backgroundColor: '#1e3a5f', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: '15px' }}>
+              <h2 style={{ color: '#fff', marginBottom: '20px' }}>이벤트 씬 테스트 페이지</h2>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                <button className="retro-block" style={{ width: '300px', height: '50px', color: '#fff' }} onClick={() => startEventTest('LOTTERY')}>복권 (선택형)</button>
+                <button className="retro-block" style={{ width: '300px', height: '50px', color: '#fff' }} onClick={() => startEventTest('JOB')}>꿀알바 (선택형)</button>
+                <button className="retro-block" style={{ width: '300px', height: '50px', color: '#fff' }} onClick={() => startEventTest('ILLEGAL')}>은밀한 알바 (선택형)</button>
+                <button className="retro-block" style={{ width: '300px', height: '50px', color: '#fff' }} onClick={() => startEventTest('LOST_ITEM')}>습득물 (선택형)</button>
+                <button className="retro-block" style={{ width: '300px', height: '50px', color: '#fff' }} onClick={() => startEventTest('BUTTON_100')}>백억 버튼 (선택형)</button>
+                <button className="retro-block" style={{ width: '300px', height: '50px', color: '#fff', backgroundColor: '#2c5364' }} onClick={() => startEventTest('ALLOWANCE')}>뜻밖의 용돈 (단발형)</button>
+                <button className="retro-block" style={{ width: '300px', height: '50px', color: '#fff', backgroundColor: '#2c5364' }} onClick={() => startEventTest('GOODS_SALE')}>스타 굿즈 판매 (단발형)</button>
+              </div>
+              <button className="pixel-btn" style={{ marginTop: '20px' }} onClick={() => setScene('MAIN')}>뒤로 가기</button>
+            </div>
+          </motion.div>
+        )}
+
+        {scene === 'EVENT_SCENE' && (
+          <motion.div key="event_scene" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="scene-wrapper">
+            <EventScene onComplete={() => setScene('MAIN')} eventType={testEventType} />
           </motion.div>
         )}
 

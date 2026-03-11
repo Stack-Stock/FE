@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import '../styles/UIComponents.css'; // 공통 블록 디자인
-import '../styles/MainMenu.css';    // 메인 전용 위치 설정
+import '../styles/UIComponents.css'; 
+import '../styles/MainMenu.css';    
 
-const MainMenu = ({ onStart, onTestEnding, user, onLogout }) => {
+const MainMenu = ({ onStart, onTestEnding, onTestEvent, user, onLogout }) => {
   const bgSequence = [1, 2, 3, 4, 5, 6, 7, 8, 7, 6, 5, 4, 3, 2];
   const logoSequence = [1, 2, 3, 4, 5, 4, 3, 6, 6, 7];
 
@@ -27,7 +27,7 @@ const MainMenu = ({ onStart, onTestEnding, user, onLogout }) => {
 
   return (
     <div className="main-menu-container">
-      {/* 1. 배경 & 로고 레이어 (기존 로직 동일) */}
+      {/* 1. 배경 & 로고 레이어 */}
       <div className="main-bg-layer">
         <img src={`${publicPath}/assets/main/bg/main_bg_${prevBgFrame}.png`} alt="buffer" className="base-img static-buffer" />
         <AnimatePresence mode="popLayout">
@@ -46,7 +46,7 @@ const MainMenu = ({ onStart, onTestEnding, user, onLogout }) => {
         </AnimatePresence>
       </div>
 
-      {/* 2. 유저 프로필 (우측 상단) */}
+      {/* 2. 유저 프로필 */}
       <div className="user-profile-container">
         <div className="profile-block" onClick={() => setIsDropdownOpen(!isDropdownOpen)}>
            <img src={`${publicPath}/assets/ui/user_icon.png`} alt="user" className="profile-icon-img" 
@@ -62,7 +62,7 @@ const MainMenu = ({ onStart, onTestEnding, user, onLogout }) => {
         </AnimatePresence>
       </div>
 
-      {/* 3. 시작하기 / 이어하기 버튼 (수정된 디자인 적용) */}
+      {/* 3. 버튼 레이어 */}
       <div className="main-ui-layer">
         <div className="main-button-group">
           <button className="retro-block menu-btn-custom" onClick={onStart}>
@@ -71,14 +71,15 @@ const MainMenu = ({ onStart, onTestEnding, user, onLogout }) => {
           <button className="retro-block menu-btn-custom continue-btn" disabled>
             [ 이어하기 (준비중) ]
           </button>
-          {/* 엔딩 테스트 버튼 추가 */}
-          <button 
-            className="retro-block" 
-            style={{ width: '320px', height: '50px', fontSize: '18px', color: '#aaa', marginTop: '10px' }} 
-            onClick={onTestEnding}
-          >
-            [ 엔딩 테스트 모드 ]
-          </button>
+          
+          <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+            <button className="retro-block" style={{ width: '155px', height: '50px', fontSize: '14px', color: '#aaa' }} onClick={onTestEnding}>
+              엔딩 테스트
+            </button>
+            <button className="retro-block" style={{ width: '155px', height: '50px', fontSize: '14px', color: '#aaa' }} onClick={onTestEvent}>
+              이벤트 테스트
+            </button>
+          </div>
         </div>
         <p className="copyright" style={{ position: 'absolute', bottom: '20px', left: '50%', transform: 'translateX(-50%)' }}>
           © 2026 Team SSAFY 14th. All rights reserved.
