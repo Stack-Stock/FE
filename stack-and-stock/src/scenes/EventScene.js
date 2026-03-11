@@ -74,6 +74,12 @@ const EventScene = ({ eventType, onComplete }) => {
       title: '스타 굿즈 판매',
       image: 'event_goods_sale.png',
       text: '한정판 굿즈가 드디어 팔렸다! 택배 상자에서 빛이 나는 것 같다.'
+    },
+    POLICE_ARREST: {
+      type: 'SINGLE',
+      title: '경찰 체포',
+      image: 'event_police_arrest.png',
+      text: '착하게 살걸... 착하게 살자...'
     }
   };
 
