@@ -35,6 +35,12 @@ const DUMMY_ARCHIVE_DATA = {
   ]
 };
 
+// 💡 [신규] 번뜩임 더미 데이터 (외부 파일 대신 임시로 상단에 선언)
+const DUMMY_SPARK_DATA = {
+  sparkCount: 0, // 현재 보유한 번뜩임 개수 (0이면 버튼이 회색으로 비활성화됨)
+  studyCount: 2  // 현재 공부 진행 횟수 (최대 3)
+};
+
 const GamePlay = ({ data, onAction, onGoMain }) => {
   const [hoveredObject, setHoveredObject] = useState(null);
   const [isStockOpen, setIsStockOpen] = useState(false);
@@ -72,6 +78,7 @@ const GamePlay = ({ data, onAction, onGoMain }) => {
   const holdingsData = safeData.holdings || DUMMY_HOLDINGS;
   const tradeLogsData = safeData.tradeLogs || DUMMY_TRADE_LOGS;
   const archiveData = safeData.archive || DUMMY_ARCHIVE_DATA;
+  const sparkData = safeData.spark || DUMMY_SPARK_DATA; // 💡 번뜩임 데이터 연결
 
   useEffect(() => {
     // 2일차 이상 아침에만 정산 팝업 오픈
@@ -138,6 +145,10 @@ const GamePlay = ({ data, onAction, onGoMain }) => {
     alignItems: 'center'
   };
 
+  const textShadowStyle = {
+    textShadow: '2px 2px 0px #000, -1px -1px 0px #000, 1px -1px 0px #000, -1px 1px 0px #000, 1px 1px 0px #000'
+  };
+
   return (
     <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', backgroundColor: '#000', boxSizing: 'border-box', position: 'relative' }}>
       <StatusBar data={{...safeData, money: currentMoney}} />
@@ -148,6 +159,47 @@ const GamePlay = ({ data, onAction, onGoMain }) => {
         backgroundSize: `${FINAL_BG_SCALE}%`, imageRendering: 'pixelated', display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'hidden'
       }}>
         
+        {/* 💡 [신규 누락 복구] 좌측 상단 번뜩임 UI */}
+        <div style={{ position: 'absolute', top: '20px', left: '30px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', zIndex: 1000 }}>
+          {/* 번뜩임 버튼 (개수가 0이면 회색조 & 클릭 불가) */}
+          <button 
+            style={{
+              width: '55px', height: '55px', backgroundColor: 'transparent', border: 'none', padding: 0,
+              cursor: sparkData.sparkCount > 0 ? 'pointer' : 'not-allowed',
+              filter: sparkData.sparkCount > 0 ? 'drop-shadow(2px 2px 0px rgba(0,0,0,0.5))' : 'grayscale(100%) opacity(0.7) drop-shadow(2px 2px 0px rgba(0,0,0,0.5))',
+              transition: 'all 0.2s',
+              transform: sparkData.sparkCount > 0 ? 'scale(1)' : 'scale(0.95)' // 비활성화 시 살짝 작게
+            }}
+            disabled={sparkData.sparkCount === 0}
+            onClick={() => {
+              if (sparkData.sparkCount > 0) {
+                console.log('💡 [API 전송 대기] 번뜩임 사용! 행동력 +1 요청');
+              }
+            }}
+          >
+            <img src={`${publicPath}/assets/ui/spark_icon.png`} alt="번뜩임" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+          </button>
+
+          {/* 번뜩임 정보 텍스트 박스 */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <span style={{ 
+              color: sparkData.sparkCount > 0 ? '#FFD700' : '#aaa', // 비활성화시 글씨색 더 흐리게
+              fontSize: '14px', fontWeight: 'bold', marginBottom: '1px',
+              ...textShadowStyle // 그림자 적용
+            }}>
+              번뜩임: {sparkData.sparkCount}
+            </span>
+            <span style={{ 
+              color: '#fff', // 기본 글씨색 흰색으로 변경
+              fontSize: '12px',
+              fontWeight: 'bold',
+              ...textShadowStyle // 그림자 적용
+            }}>
+              공부: {sparkData.studyCount}/3
+            </span>
+          </div>
+        </div>
+
         <div style={{ position: 'absolute', top: '20px', right: '30px', display: 'flex', gap: '15px', zIndex: 1000 }}>
           {/* 정산 (P) 버튼 - 1일차 비활성화 */}
           <button 
