@@ -108,10 +108,10 @@ const GamePlay = ({ data, onAction, onGoMain }) => {
       setIsPhoneOpen(true); 
     } else if (id === 'NEWSPAPER') {
       if (lastReadNewsDay === currentDay) setIsNewsOpen(true);
-      else setConfirmConfig({ isOpen: true, type: 'NEWSPAPER', cost: 1, title: '신문', actionText: '확인' }); 
+      else setConfirmConfig({ isOpen: true, type: 'NEWSPAPER', cost: 2, title: '신문', actionText: '확인' }); 
     } else if (id === 'TV') {
       if (lastWatchedTvDay === currentDay) setIsTvOpen(true);
-      else setConfirmConfig({ isOpen: true, type: 'TV', cost: 2, title: '티비', actionText: '확인' }); 
+      else setConfirmConfig({ isOpen: true, type: 'TV', cost: 1, title: '티비', actionText: '확인' }); 
     } else if (id === 'DESK') {
       if (!isStudiedToday) {
         setConfirmConfig({ isOpen: true, type: 'DESK', cost: 1, title: '공부', actionText: '진행' });

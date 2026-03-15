@@ -37,9 +37,9 @@ const ActionButtons = ({ period, hoveredObject, onHover, onInteract, isStudiedTo
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gridTemplateRows: '1fr 1fr', gap: '8px', height: '100%' }}>
       <button style={getBtnStyle('PHONE')} onMouseEnter={() => handleMouseEnter('PHONE')} onMouseLeave={() => handleMouseLeave('PHONE')} onClick={() => handleClick('PHONE')}>[스마트폰]</button>
-      <button style={getBtnStyle('NEWSPAPER')} onMouseEnter={() => handleMouseEnter('NEWSPAPER')} onMouseLeave={() => handleMouseLeave('NEWSPAPER')} onClick={() => handleClick('NEWSPAPER')}>[신문]</button>
       <button style={getBtnStyle('TV')} onMouseEnter={() => handleMouseEnter('TV')} onMouseLeave={() => handleMouseLeave('TV')} onClick={() => handleClick('TV')}>[티비]</button>
-      
+      <button style={getBtnStyle('NEWSPAPER')} onMouseEnter={() => handleMouseEnter('NEWSPAPER')} onMouseLeave={() => handleMouseLeave('NEWSPAPER')} onClick={() => handleClick('NEWSPAPER')}>[신문]</button>
+            
       {/* 💡 텍스트도 [공부완료]로 바뀝니다. */}
       <button style={getBtnStyle('DESK')} onMouseEnter={() => handleMouseEnter('DESK')} onMouseLeave={() => handleMouseLeave('DESK')} onClick={() => handleClick('DESK')}>
         {isStudiedToday ? '[공부완료]' : '[공부하기]'}

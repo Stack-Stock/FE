@@ -9,8 +9,8 @@ const BottomPanel = ({ data, hoveredObject, onHover, onInteract, isStudiedToday 
   const getPanelText = () => {
     switch (hoveredObject) {
       case 'PHONE': return { title: "sns 찌라시로 정보를 확인해 보세요!", sub: "(소모 행동력 : 0)" };
-      case 'NEWSPAPER': return { title: "언론사의 기사로 정보를 확인해 보세요!", sub: "(소모 행동력 : 1)" };
-      case 'TV': return { title: "최신 뉴스로 정보를 확인해 보세요!", sub: "(소모 행동력 : 2)" };
+      case 'NEWSPAPER': return { title: "언론사의 기사로 정보를 확인해 보세요!", sub: "(소모 행동력 : 2)" };
+      case 'TV': return { title: "최신 뉴스로 정보를 확인해 보세요!", sub: "(소모 행동력 : 1)" };
       case 'LAPTOP': return { title: "뉴스와 기사에서 얻은 정보로 투자를 진행해 보세요!", sub: "(소모 행동력 : 1)" };
       case 'DESK': 
         // 💡 이미 공부했다면 안내 문구도 바뀝니다.
