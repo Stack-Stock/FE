@@ -1,42 +1,41 @@
 import React from 'react';
 
-const ActionButtons = ({ period, onHover, onAction }) => {
-  // 현재 시간대(period)에 따른 버튼 구성
-  const isMorning = period === 'MORNING';
-
-  const buttons = [
-    { id: 'INVEST', label: '투자하기', target: 'COMPUTER' },
-    { id: 'STUDY', label: '공부하기', target: 'DESK' },
-    { 
-      id: 'NEXT', 
-      label: isMorning ? '학교가기' : '잠자기', 
-      target: isMorning ? 'DOOR' : 'BED' 
-    },
-    { id: 'PHONE', label: '스마트폰', target: 'PHONE' },
-    { id: 'NEWS', label: '신문', target: 'NEWSPAPER' },
-    { id: 'TV', label: '티비', target: 'TV' },
-  ];
+const ActionButtons = ({ onHover, onAction, onNewsClick }) => {
+  // 공통 버튼 스타일 정의
+  const btnStyle = { 
+    backgroundColor: '#696969', 
+    border: '3px solid #333', 
+    color: '#fff', 
+    fontSize: '16px', // 💡 기존 18px -> 16px로 축소하여 버튼 크기에 맞춤
+    cursor: 'pointer'
+  };
 
   return (
-    <div style={{
+    <div style={{ 
       display: 'grid',
-      gridTemplateColumns: 'repeat(3, 1fr)',
-      gap: '10px',
-      width: '600px',
-      margin: '0 auto'
+      gridTemplateColumns: '1fr 1fr 1fr', 
+      gridTemplateRows: '1fr 1fr',       
+      gap: '8px', // 간격도 살짝 줄임
+      height: '100%'
     }}>
-      {buttons.map((btn) => (
-        <button
-          key={btn.id}
-          className="pixel-btn"
-          style={{ fontSize: '18px', padding: '15px' }}
-          onMouseEnter={() => onHover(btn.target)} // 마우스 올리면 해당 가구 ID 전달
-          onMouseLeave={() => onHover(null)}       // 마우스 떼면 초기화
-          onClick={() => onAction(btn.id)}
-        >
-          [{btn.label}]
-        </button>
-      ))}
+      <button className="pixel-btn" style={btnStyle} onMouseEnter={() => onHover('COMPUTER')} onMouseLeave={() => onHover(null)}>
+        [투자하기]
+      </button>
+      <button className="pixel-btn" style={btnStyle} onMouseEnter={() => onHover('DESK')} onMouseLeave={() => onHover(null)}>
+        [공부하기]
+      </button>
+      <button className="pixel-btn" style={btnStyle} onMouseEnter={() => onHover('BED')} onMouseLeave={() => onHover(null)} onClick={onAction}>
+        [잠자기]
+      </button>
+      <button className="pixel-btn" style={btnStyle} onMouseEnter={() => onHover('PHONE')} onMouseLeave={() => onHover(null)}>
+        [스마트폰]
+      </button>
+      <button className="pixel-btn" style={btnStyle} onMouseEnter={() => onHover('NEWSPAPER')} onMouseLeave={() => onHover(null)} onClick={onNewsClick}>
+        [신문]
+      </button>
+      <button className="pixel-btn" style={btnStyle} onMouseEnter={() => onHover('TV')} onMouseLeave={() => onHover(null)}>
+        [티비]
+      </button>
     </div>
   );
 };
