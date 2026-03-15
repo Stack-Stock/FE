@@ -24,6 +24,7 @@ const GamePlay = ({ data, onAction, onGoMain }) => {
   const [lastStudiedDay, setLastStudiedDay] = useState(0); 
 
   // 💡 [신규] 주식 거래 확정 버튼을 눌렀을 때, 행동력 소모 경고창을 통과하기 전까지 임시로 데이터를 담아둘 상태
+  const [lastTradedDay, setLastTradedDay] = useState(0);
   const [pendingTradeData, setPendingTradeData] = useState(null);
 
   const safeData = data || {};
@@ -33,6 +34,7 @@ const GamePlay = ({ data, onAction, onGoMain }) => {
   const bgImage = `${publicPath}/assets/bg/bg_${timePeriod}.png`;
 
   const isStudiedToday = lastStudiedDay === currentDay;
+  const isTradedToday = lastTradedDay === currentDay;
 
   const FINAL_BG_X = 0, FINAL_BG_Y = -65, FINAL_BG_SCALE = 100; 
   const FINAL_ASSET_CONFIG = {
@@ -85,6 +87,8 @@ const GamePlay = ({ data, onAction, onGoMain }) => {
       // 나중에 이 부분에서 부모 컴포넌트로 pendingTradeData를 올려보내고, 
       // 상태(돈, 주식보유량, 행동력)를 업데이트하는 함수를 호출하시면 됩니다.
       
+      setLastTradedDay(currentDay);
+
       setIsStockOpen(false); // 거래창 닫기
       setPendingTradeData(null); // 임시 데이터 초기화
     }
@@ -136,6 +140,7 @@ const GamePlay = ({ data, onAction, onGoMain }) => {
           setPendingTradeData(tradeData);
           setConfirmConfig({ isOpen: true, type: 'LAPTOP', cost: 1, title: '투자 진행', actionText: '확정' });
         }}
+        isTradedToday={isTradedToday}
       />
 
     </div>
