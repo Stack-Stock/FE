@@ -1,8 +1,8 @@
 import React from 'react';
 import ActionButtons from './ActionButtons';
 
-// 💡 더 이상 복잡한 props를 많이 받지 않고 onInteract만 받습니다.
-const BottomPanel = ({ data, hoveredObject, onHover, onInteract }) => {
+// 💡 isStudiedToday 추가
+const BottomPanel = ({ data, hoveredObject, onHover, onInteract, isStudiedToday }) => {
   const day = data?.day || 10;
   const period = data?.period || 'MORNING';
 
@@ -12,15 +12,15 @@ const BottomPanel = ({ data, hoveredObject, onHover, onInteract }) => {
       case 'NEWSPAPER': return { title: "언론사의 기사로 정보를 확인해 보세요!", sub: "(소모 행동력 : 1)" };
       case 'TV': return { title: "최신 뉴스로 정보를 확인해 보세요!", sub: "(소모 행동력 : 2)" };
       case 'LAPTOP': return { title: "뉴스와 기사에서 얻은 정보로 투자를 진행해 보세요!", sub: "(소모 행동력 : 1)" };
-      case 'DESK': return { title: "학생의 본분은 공부! 공부를 너무 안 하면 큰 일이 일어날지도...?", sub: "(소모 행동력 : 1)" };
+      case 'DESK': 
+        // 💡 이미 공부했다면 안내 문구도 바뀝니다.
+        return isStudiedToday 
+          ? { title: "오늘 할 공부는 이미 다 마쳤다!", sub: "조금 쉬어도 되지 않을까?" }
+          : { title: "학생의 본분은 공부! 공부를 너무 안 하면 큰 일이 일어날지도...?", sub: "(소모 행동력 : 1)" };
       case 'BED':
-        return period === 'MORNING'
-          ? { title: "오늘 하루도 열심히!", sub: "(사용하지 않은 행동력이 없는지 확인해 주세요.)" }
-          : { title: "오늘은 이만 쉬어야 겠어요!", sub: "(사용하지 않은 행동력이 없는지 확인해 주세요.)" };
+        return period === 'MORNING' ? { title: "오늘 하루도 열심히!", sub: "(사용하지 않은 행동력이 없는지 확인해 주세요.)" } : { title: "오늘은 이만 쉬어야 겠어요!", sub: "(사용하지 않은 행동력이 없는지 확인해 주세요.)" };
       default:
-        return period === 'MORNING'
-          ? { title: `${day}일차 아침이 밝았습니다!`, sub: "오늘도 활기찬 하루를 시작해볼까?" }
-          : { title: "뉴스와 기사를 보고 투자를 진행해 주세요!", sub: "어제 산 주식이 올랐을까?" };
+        return period === 'MORNING' ? { title: `${day}일차 아침이 밝았습니다!`, sub: "오늘도 활기찬 하루를 시작해볼까?" } : { title: "뉴스와 기사를 보고 투자를 진행해 주세요!", sub: "어제 산 주식이 올랐을까?" };
     }
   };
 
@@ -33,7 +33,8 @@ const BottomPanel = ({ data, hoveredObject, onHover, onInteract }) => {
         <p style={{ color: '#aaa', fontSize: '16px', marginTop: '8px' }}>{currentText.sub}</p>
       </div>
       <div style={{ flex: 1, backgroundColor: '#cdaa7d', border: '4px solid #4a3b2c', borderRadius: '8px', padding: '8px' }}>
-        <ActionButtons period={period} hoveredObject={hoveredObject} onHover={onHover} onInteract={onInteract} />
+        {/* 💡 props로 같이 넘겨줍니다 */}
+        <ActionButtons period={period} hoveredObject={hoveredObject} onHover={onHover} onInteract={onInteract} isStudiedToday={isStudiedToday} />
       </div>
     </div>
   );

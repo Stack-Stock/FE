@@ -6,27 +6,31 @@ import NewsModal from '../components/NewsModal';
 import PhoneModal from '../components/PhoneModal';
 import TvModal from '../components/TvModal';
 import EnergyConfirmModal from '../components/EnergyConfirmModal';
+import StudyModal from '../components/StudyModal'; // 💡 신규 임포트
 import RoomAssets from '../components/RoomAssets'; 
 
 const GamePlay = ({ data, onAction, onGoMain }) => {
   const [hoveredObject, setHoveredObject] = useState(null);
-  
-  // 모달 오픈 상태 관리
   const [isStockOpen, setIsStockOpen] = useState(false);
   const [isNewsOpen, setIsNewsOpen] = useState(false);
   const [isPhoneOpen, setIsPhoneOpen] = useState(false);
   const [isTvOpen, setIsTvOpen] = useState(false);
+  const [isStudyOpen, setIsStudyOpen] = useState(false); // 💡 신규 상태
   
-  // 💡 [핵심 로직] 행동력 소모 경고창 상태 및 매체 읽은 날짜 기억
-  const [confirmConfig, setConfirmConfig] = useState({ isOpen: false, type: '', cost: 0, title: '' });
+  const [confirmConfig, setConfirmConfig] = useState({ isOpen: false, type: '', cost: 0, title: '', actionText: '' });
+  
   const [lastReadNewsDay, setLastReadNewsDay] = useState(0);
   const [lastWatchedTvDay, setLastWatchedTvDay] = useState(0);
+  const [lastStudiedDay, setLastStudiedDay] = useState(0); // 💡 신규 상태
 
   const safeData = data || {};
   const currentDay = safeData.day || 10;
   const timePeriod = safeData.period === 'MORNING' ? 'morning' : 'night';
   const publicPath = process.env.PUBLIC_URL;
   const bgImage = `${publicPath}/assets/bg/bg_${timePeriod}.png`;
+
+  // 💡 오늘 공부를 마쳤는지 여부
+  const isStudiedToday = lastStudiedDay === currentDay;
 
   const FINAL_BG_X = 0, FINAL_BG_Y = -65, FINAL_BG_SCALE = 100; 
   const FINAL_ASSET_CONFIG = {
@@ -39,42 +43,42 @@ const GamePlay = ({ data, onAction, onGoMain }) => {
     LAPTOP: { x: 277, y: 278, w: 75, h: 62, scale: 272 },
   };
 
-  // 💡 사물이든 버튼이든 클릭하면 모두 여기로 들어옵니다!
   const handleInteract = (id) => {
     if (id === 'BED') {
-      onAction(); // 잠자기/학교가기 (기존 로직)
+      onAction(); 
     } else if (id === 'LAPTOP') {
-      setIsStockOpen(true); // 투자창
+      setIsStockOpen(true); 
     } else if (id === 'PHONE') {
-      setIsPhoneOpen(true); // 행동력 0이므로 바로 열림
+      setIsPhoneOpen(true); 
     } else if (id === 'NEWSPAPER') {
-      if (lastReadNewsDay === currentDay) {
-        setIsNewsOpen(true); // 오늘 이미 읽었으면 바로 열림
-      } else {
-        setConfirmConfig({ isOpen: true, type: 'NEWSPAPER', cost: 1, title: '신문' }); // 아니면 경고창 띄움
-      }
+      if (lastReadNewsDay === currentDay) setIsNewsOpen(true);
+      else setConfirmConfig({ isOpen: true, type: 'NEWSPAPER', cost: 1, title: '신문', actionText: '확인' }); 
     } else if (id === 'TV') {
-      if (lastWatchedTvDay === currentDay) {
-        setIsTvOpen(true); // 오늘 이미 봤으면 바로 열림
-      } else {
-        setConfirmConfig({ isOpen: true, type: 'TV', cost: 2, title: '티비' }); // 아니면 경고창 띄움
+      if (lastWatchedTvDay === currentDay) setIsTvOpen(true);
+      else setConfirmConfig({ isOpen: true, type: 'TV', cost: 2, title: '티비', actionText: '확인' }); 
+    } else if (id === 'DESK') {
+      // 💡 [핵심] 공부하기 버튼 클릭 시 로직
+      if (!isStudiedToday) {
+        setConfirmConfig({ isOpen: true, type: 'DESK', cost: 1, title: '공부', actionText: '진행' });
       }
     }
   };
 
-  // 💡 경고창에서 [확인]을 눌렀을 때 실행되는 함수
   const handleConfirmAction = () => {
-    // 여기에 나중에 API 연동이나 Zustand 상태를 깎는 코드를 넣으면 됩니다.
     console.log(`[API 연동 대기] 행동력 ${confirmConfig.cost} 소모됨!`);
 
     if (confirmConfig.type === 'NEWSPAPER') {
-      setLastReadNewsDay(currentDay); // 읽은 날짜를 오늘로 갱신
-      setIsNewsOpen(true);            // 모달 오픈
+      setLastReadNewsDay(currentDay);
+      setIsNewsOpen(true);
     } else if (confirmConfig.type === 'TV') {
       setLastWatchedTvDay(currentDay);
       setIsTvOpen(true);
+    } else if (confirmConfig.type === 'DESK') {
+      // 💡 공부 확인 누르면 공부한 날짜 기록 후 모달 오픈!
+      setLastStudiedDay(currentDay);
+      setIsStudyOpen(true);
     }
-    setConfirmConfig({ isOpen: false, type: '', cost: 0, title: '' }); // 경고창 닫기
+    setConfirmConfig({ isOpen: false, type: '', cost: 0, title: '', actionText: '' }); 
   };
 
   const circleBtnStyle = {
@@ -98,22 +102,19 @@ const GamePlay = ({ data, onAction, onGoMain }) => {
           <button style={{ ...circleBtnStyle, backgroundColor: '#e74c3c' }} onClick={() => console.log('튜토리얼 오픈!')}>?</button>
         </div>
 
-        <RoomAssets config={FINAL_ASSET_CONFIG} period={timePeriod} hoveredObject={hoveredObject} onHover={setHoveredObject} onInteract={handleInteract} />
+        {/* isStudiedToday 값을 내려줌 */}
+        <RoomAssets config={FINAL_ASSET_CONFIG} period={timePeriod} hoveredObject={hoveredObject} onHover={setHoveredObject} onInteract={handleInteract} isStudiedToday={isStudiedToday} />
       </div>
 
-      <BottomPanel data={safeData} hoveredObject={hoveredObject} onHover={setHoveredObject} onInteract={handleInteract} />
+      <BottomPanel data={safeData} hoveredObject={hoveredObject} onHover={setHoveredObject} onInteract={handleInteract} isStudiedToday={isStudiedToday} />
 
-      {/* 💡 각종 모달들 렌더링 */}
-      <EnergyConfirmModal 
-        isOpen={confirmConfig.isOpen} 
-        config={confirmConfig}
-        onConfirm={handleConfirmAction} 
-        onClose={() => setConfirmConfig({ isOpen: false, type: '', cost: 0, title: '' })} 
-      />
+      <EnergyConfirmModal isOpen={confirmConfig.isOpen} config={confirmConfig} onConfirm={handleConfirmAction} onClose={() => setConfirmConfig({ isOpen: false, type: '', cost: 0, title: '', actionText: '' })} />
       <StockModal isOpen={isStockOpen} onClose={() => setIsStockOpen(false)} money={safeData.money} onBuy={() => {}} />
       <NewsModal isOpen={isNewsOpen} onClose={() => setIsNewsOpen(false)} day={currentDay} />
       <PhoneModal isOpen={isPhoneOpen} onClose={() => setIsPhoneOpen(false)} day={currentDay} />
       <TvModal isOpen={isTvOpen} onClose={() => setIsTvOpen(false)} day={currentDay} />
+      {/* 💡 신규: 공부 완료 모달 */}
+      <StudyModal isOpen={isStudyOpen} onClose={() => setIsStudyOpen(false)} />
 
     </div>
   );
