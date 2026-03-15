@@ -6,7 +6,7 @@ import NewsModal from '../components/NewsModal';
 import PhoneModal from '../components/PhoneModal';
 import TvModal from '../components/TvModal';
 import EnergyConfirmModal from '../components/EnergyConfirmModal';
-import StudyModal from '../components/StudyModal'; // 💡 신규 임포트
+import StudyModal from '../components/StudyModal';
 import RoomAssets from '../components/RoomAssets'; 
 
 const GamePlay = ({ data, onAction, onGoMain }) => {
@@ -15,13 +15,16 @@ const GamePlay = ({ data, onAction, onGoMain }) => {
   const [isNewsOpen, setIsNewsOpen] = useState(false);
   const [isPhoneOpen, setIsPhoneOpen] = useState(false);
   const [isTvOpen, setIsTvOpen] = useState(false);
-  const [isStudyOpen, setIsStudyOpen] = useState(false); // 💡 신규 상태
+  const [isStudyOpen, setIsStudyOpen] = useState(false); 
   
   const [confirmConfig, setConfirmConfig] = useState({ isOpen: false, type: '', cost: 0, title: '', actionText: '' });
   
   const [lastReadNewsDay, setLastReadNewsDay] = useState(0);
   const [lastWatchedTvDay, setLastWatchedTvDay] = useState(0);
-  const [lastStudiedDay, setLastStudiedDay] = useState(0); // 💡 신규 상태
+  const [lastStudiedDay, setLastStudiedDay] = useState(0); 
+
+  // 💡 [신규] 주식 거래 확정 버튼을 눌렀을 때, 행동력 소모 경고창을 통과하기 전까지 임시로 데이터를 담아둘 상태
+  const [pendingTradeData, setPendingTradeData] = useState(null);
 
   const safeData = data || {};
   const currentDay = safeData.day || 10;
@@ -29,7 +32,6 @@ const GamePlay = ({ data, onAction, onGoMain }) => {
   const publicPath = process.env.PUBLIC_URL;
   const bgImage = `${publicPath}/assets/bg/bg_${timePeriod}.png`;
 
-  // 💡 오늘 공부를 마쳤는지 여부
   const isStudiedToday = lastStudiedDay === currentDay;
 
   const FINAL_BG_X = 0, FINAL_BG_Y = -65, FINAL_BG_SCALE = 100; 
@@ -47,6 +49,7 @@ const GamePlay = ({ data, onAction, onGoMain }) => {
     if (id === 'BED') {
       onAction(); 
     } else if (id === 'LAPTOP') {
+      // 💡 주식 창을 "열 때는" 행동력을 소모하지 않습니다.
       setIsStockOpen(true); 
     } else if (id === 'PHONE') {
       setIsPhoneOpen(true); 
@@ -57,7 +60,6 @@ const GamePlay = ({ data, onAction, onGoMain }) => {
       if (lastWatchedTvDay === currentDay) setIsTvOpen(true);
       else setConfirmConfig({ isOpen: true, type: 'TV', cost: 2, title: '티비', actionText: '확인' }); 
     } else if (id === 'DESK') {
-      // 💡 [핵심] 공부하기 버튼 클릭 시 로직
       if (!isStudiedToday) {
         setConfirmConfig({ isOpen: true, type: 'DESK', cost: 1, title: '공부', actionText: '진행' });
       }
@@ -74,10 +76,19 @@ const GamePlay = ({ data, onAction, onGoMain }) => {
       setLastWatchedTvDay(currentDay);
       setIsTvOpen(true);
     } else if (confirmConfig.type === 'DESK') {
-      // 💡 공부 확인 누르면 공부한 날짜 기록 후 모달 오픈!
       setLastStudiedDay(currentDay);
       setIsStudyOpen(true);
+    } else if (confirmConfig.type === 'LAPTOP') {
+      // 💡 [신규] 주식 거래 확정 시 처리
+      console.log('최종 주식 거래 데이터 (백엔드 전송용):', pendingTradeData);
+      
+      // 나중에 이 부분에서 부모 컴포넌트로 pendingTradeData를 올려보내고, 
+      // 상태(돈, 주식보유량, 행동력)를 업데이트하는 함수를 호출하시면 됩니다.
+      
+      setIsStockOpen(false); // 거래창 닫기
+      setPendingTradeData(null); // 임시 데이터 초기화
     }
+    
     setConfirmConfig({ isOpen: false, type: '', cost: 0, title: '', actionText: '' }); 
   };
 
@@ -102,19 +113,30 @@ const GamePlay = ({ data, onAction, onGoMain }) => {
           <button style={{ ...circleBtnStyle, backgroundColor: '#e74c3c' }} onClick={() => console.log('튜토리얼 오픈!')}>?</button>
         </div>
 
-        {/* isStudiedToday 값을 내려줌 */}
         <RoomAssets config={FINAL_ASSET_CONFIG} period={timePeriod} hoveredObject={hoveredObject} onHover={setHoveredObject} onInteract={handleInteract} isStudiedToday={isStudiedToday} />
       </div>
 
       <BottomPanel data={safeData} hoveredObject={hoveredObject} onHover={setHoveredObject} onInteract={handleInteract} isStudiedToday={isStudiedToday} />
 
       <EnergyConfirmModal isOpen={confirmConfig.isOpen} config={confirmConfig} onConfirm={handleConfirmAction} onClose={() => setConfirmConfig({ isOpen: false, type: '', cost: 0, title: '', actionText: '' })} />
-      <StockModal isOpen={isStockOpen} onClose={() => setIsStockOpen(false)} money={safeData.money} onBuy={() => {}} />
       <NewsModal isOpen={isNewsOpen} onClose={() => setIsNewsOpen(false)} day={currentDay} />
       <PhoneModal isOpen={isPhoneOpen} onClose={() => setIsPhoneOpen(false)} day={currentDay} />
       <TvModal isOpen={isTvOpen} onClose={() => setIsTvOpen(false)} day={currentDay} />
-      {/* 💡 신규: 공부 완료 모달 */}
       <StudyModal isOpen={isStudyOpen} onClose={() => setIsStudyOpen(false)} />
+
+      {/* 💡 [핵심] 변경된 StockModal 적용 */}
+      <StockModal 
+        isOpen={isStockOpen} 
+        onClose={() => setIsStockOpen(false)} 
+        day={currentDay}
+        money={safeData.money || 250000} // 기본값 셋팅
+        holdings={safeData.holdings || { 4: 10, 1: 5 }} // 테스트용 더미 보유주식 (나중엔 실제 데이터 연동)
+        onConfirmTrade={(tradeData) => {
+          // 💡 거래 확정 버튼을 누르면 데이터를 임시 저장하고 행동력 경고창을 띄웁니다!
+          setPendingTradeData(tradeData);
+          setConfirmConfig({ isOpen: true, type: 'LAPTOP', cost: 1, title: '투자 진행', actionText: '확정' });
+        }}
+      />
 
     </div>
   );
