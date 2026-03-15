@@ -10,6 +10,7 @@ import StudyModal from '../components/StudyModal';
 import RoomAssets from '../components/RoomAssets'; 
 import SettlementModal from '../components/SettlementModal'; 
 import ArchiveModal from '../components/ArchiveModal'; 
+import HelpModal from '../components/HelpModal';
 
 // 💡 [API 연동 대비 포인트] 
 // 나중에 백엔드 API가 연결되면 이 더미 상수들을 지우거나 안 쓰시면 됩니다.
@@ -53,6 +54,8 @@ const GamePlay = ({ data, onAction, onGoMain }) => {
   const [lastStudiedDay, setLastStudiedDay] = useState(0); 
   const [lastTradedDay, setLastTradedDay] = useState(0);
   const [pendingTradeData, setPendingTradeData] = useState(null);
+
+  const [isHelpOpen, setIsHelpOpen] = useState(false);
 
   const safeData = data || {};
   const currentDay = safeData.day || 10;
@@ -181,7 +184,7 @@ const GamePlay = ({ data, onAction, onGoMain }) => {
           {/* 튜토리얼 (?) 버튼 */}
           <button 
             style={{ ...circleBtnStyle, backgroundColor: '#e74c3c', cursor: 'pointer', boxShadow: '2px 2px 0px rgba(0,0,0,0.5)' }} 
-            onClick={() => console.log('튜토리얼 오픈!')}
+            onClick={() => setIsHelpOpen(true)}
           >
             ?
           </button>
@@ -229,6 +232,11 @@ const GamePlay = ({ data, onAction, onGoMain }) => {
         onClose={() => setIsArchiveOpen(false)}
         currentDay={currentDay}
         archiveData={archiveData}
+      />
+
+      <HelpModal 
+        isOpen={isHelpOpen} 
+        onClose={() => setIsHelpOpen(false)} 
       />
 
     </div>
