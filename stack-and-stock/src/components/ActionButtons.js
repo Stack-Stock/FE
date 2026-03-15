@@ -1,42 +1,51 @@
 import React from 'react';
 
-const ActionButtons = ({ period, onHover, onAction }) => {
-  // 현재 시간대(period)에 따른 버튼 구성
-  const isMorning = period === 'MORNING';
-
-  const buttons = [
-    { id: 'INVEST', label: '투자하기', target: 'COMPUTER' },
-    { id: 'STUDY', label: '공부하기', target: 'DESK' },
-    { 
-      id: 'NEXT', 
-      label: isMorning ? '학교가기' : '잠자기', 
-      target: isMorning ? 'DOOR' : 'BED' 
-    },
-    { id: 'PHONE', label: '스마트폰', target: 'PHONE' },
-    { id: 'NEWS', label: '신문', target: 'NEWSPAPER' },
-    { id: 'TV', label: '티비', target: 'TV' },
-  ];
+// 💡 [핵심] hoveredObject를 props로 받아옵니다.
+const ActionButtons = ({ period, hoveredObject, onHover, onAction, onNewsClick }) => {
+  
+  // 💡 버튼 활성화 여부에 따라 스타일을 다르게 주는 함수
+  const getBtnStyle = (id) => ({
+    backgroundColor: hoveredObject === id ? '#8b9bb4' : '#696969', // 호버 시 밝은 색
+    border: hoveredObject === id ? '3px solid #FFD700' : '3px solid #333', // 호버 시 노란색 테두리
+    color: '#fff', 
+    fontSize: '16px', 
+    cursor: 'pointer',
+    transition: 'all 0.1s ease-in-out'
+  });
 
   return (
-    <div style={{
-      display: 'grid',
-      gridTemplateColumns: 'repeat(3, 1fr)',
-      gap: '10px',
-      width: '600px',
-      margin: '0 auto'
+    <div style={{ 
+      display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gridTemplateRows: '1fr 1fr', gap: '8px', height: '100%'
     }}>
-      {buttons.map((btn) => (
-        <button
-          key={btn.id}
-          className="pixel-btn"
-          style={{ fontSize: '18px', padding: '15px' }}
-          onMouseEnter={() => onHover(btn.target)} // 마우스 올리면 해당 가구 ID 전달
-          onMouseLeave={() => onHover(null)}       // 마우스 떼면 초기화
-          onClick={() => onAction(btn.id)}
-        >
-          [{btn.label}]
-        </button>
-      ))}
+      {/* 스마트폰 (PHONE) */}
+      <button className="pixel-btn" style={getBtnStyle('PHONE')} onMouseEnter={() => onHover('PHONE')} onMouseLeave={() => onHover(null)}>
+        [스마트폰]
+      </button>
+
+      {/* 신문 (NEWSPAPER) */}
+      <button className="pixel-btn" style={getBtnStyle('NEWSPAPER')} onMouseEnter={() => onHover('NEWSPAPER')} onMouseLeave={() => onHover(null)} onClick={onNewsClick}>
+        [신문]
+      </button>
+
+      {/* 티비 (TV) */}
+      <button className="pixel-btn" style={getBtnStyle('TV')} onMouseEnter={() => onHover('TV')} onMouseLeave={() => onHover(null)}>
+        [티비]
+      </button>
+
+      {/* 공부하기 (DESK) */}
+      <button className="pixel-btn" style={getBtnStyle('DESK')} onMouseEnter={() => onHover('DESK')} onMouseLeave={() => onHover(null)}>
+        [공부하기]
+      </button>
+
+      {/* 💡 투자하기 (LAPTOP) : 호버 ID를 LAPTOP으로 일치시켰습니다. */}
+      <button className="pixel-btn" style={getBtnStyle('LAPTOP')} onMouseEnter={() => onHover('LAPTOP')} onMouseLeave={() => onHover(null)}>
+        [투자하기]
+      </button>
+
+      {/* 학교가기 / 잠자기 (BED) */}
+      <button className="pixel-btn" style={getBtnStyle('BED')} onMouseEnter={() => onHover('BED')} onMouseLeave={() => onHover(null)} onClick={onAction}>
+        {period === 'MORNING' ? '[학교가기]' : '[잠자기]'}
+      </button>
     </div>
   );
 };

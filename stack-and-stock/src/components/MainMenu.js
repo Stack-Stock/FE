@@ -55,7 +55,7 @@ const MainMenu = ({ onStart, onTestEnding, onTestEvent, user, onLogout }) => {
         <AnimatePresence>
           {isDropdownOpen && (
             <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="profile-dropdown">
-              <div className="user-name-tag">{user ? `${user.name} 님` : "Guest"}</div>
+              <div className="user-name-tag">{user ? `${user.nickname} 님` : "Guest"}</div>
               <button className="logout-btn" onClick={onLogout}>LOGOUT</button>
             </motion.div>
           )}
