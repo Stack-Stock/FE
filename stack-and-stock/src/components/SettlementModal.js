@@ -1,9 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react'; // 💡 useEffect 추가
 import { motion, AnimatePresence } from 'framer-motion';
 import { STOCK_LIST } from '../data/dummyStockData';
 
 const SettlementModal = ({ isOpen, onClose, day, settlementData, currentMoney, holdings = {}, tradeLogs = [] }) => {
-  const [activeTab, setActiveTab] = useState('SETTLEMENT'); // 'SETTLEMENT', 'HOLDINGS', 'LOGS'
+  const [activeTab, setActiveTab] = useState('SETTLEMENT');
+
+  // 💡 [핵심 추가] 모달이 열릴 때마다 무조건 첫 번째 탭('일일 정산')으로 초기화합니다.
+  useEffect(() => {
+    if (!isOpen) {
+      setActiveTab('SETTLEMENT');
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -71,7 +78,7 @@ const SettlementModal = ({ isOpen, onClose, day, settlementData, currentMoney, h
             
             {/* 1️⃣ 탭 1: 일일 정산 */}
             {activeTab === 'SETTLEMENT' && (
-              <motion.div key="SETTLEMENT" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}>
+              <motion.div key="SETTLEMENT" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.05 }}>
                 <div style={{ backgroundColor: '#1e2749', border: '2px solid #4a69bd', borderRadius: '8px', padding: '20px', marginBottom: '20px' }}>
                   <div style={{ color: '#d1d8e0', fontSize: '14px', marginBottom: '8px' }}>총 자산 변동</div>
                   <div style={{ color: formatChange(totalChange).color, fontSize: '36px', fontWeight: 'bold' }}>{formatChange(totalChange).text}</div>
@@ -91,7 +98,7 @@ const SettlementModal = ({ isOpen, onClose, day, settlementData, currentMoney, h
 
             {/* 2️⃣ 탭 2: 보유 주식 현황 */}
             {activeTab === 'HOLDINGS' && (
-              <motion.div key="HOLDINGS" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}>
+              <motion.div key="HOLDINGS" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.05 }}>
                 <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
                   <div style={{ flex: 1, backgroundColor: '#111', padding: '15px', borderRadius: '8px', border: '2px solid #333' }}>
                     <div style={{ color: '#FFD700', fontSize: '13px', marginBottom: '5px' }}>총 자산</div>
@@ -133,7 +140,7 @@ const SettlementModal = ({ isOpen, onClose, day, settlementData, currentMoney, h
 
             {/* 3️⃣ 탭 3: 거래 내역 로그 */}
             {activeTab === 'LOGS' && (
-              <motion.div key="LOGS" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}>
+              <motion.div key="LOGS" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.05 }}>
                 {tradeLogs.length === 0 ? (
                   <div style={{ textAlign: 'center', color: '#666', padding: '30px', fontSize: '16px' }}>거래 내역이 없습니다.</div>
                 ) : (
