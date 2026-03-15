@@ -10,7 +10,7 @@ const StockTradePanel = ({ stock, day, localMoney, localHoldings, onTrade, isTra
 
   const currentPrice = stock.history[day - 1];
   const totalAmount = currentPrice * quantity;
-  const holdingCount = localHoldings[stock.id] || 0;
+  const holdingCount = localHoldings[stock.id]?.quantity || 0;
 
   const handleBuy = () => {
     if (isTradedToday) return; // 오늘 거래했으면 컷

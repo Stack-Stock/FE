@@ -68,7 +68,7 @@ const StockList = ({ day, selectedStock, onSelectStock, localHoldings }) => {
           const previousPrice = history.length > 1 ? history[history.length - 2] : currentPrice;
           const changeRate = (((currentPrice - previousPrice) / previousPrice) * 100).toFixed(2);
           const isUp = currentPrice >= previousPrice;
-          const holdings = localHoldings[stock.id] || 0;
+          const holdings = localHoldings[stock.id]?.quantity || 0;
 
           return (
             <div 
