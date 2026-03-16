@@ -2,10 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import './styles/App.css';
 
-// Zustand 스토어 가져오기
 import useAuthStore from './store/useAuthStore';
 
-// 씬 컴포넌트들
 import LoadingScene from './scenes/LoadingScene';
 import AuthScene from './scenes/AuthScene'; 
 import MainMenu from './components/MainMenu';
@@ -18,21 +16,22 @@ function App() {
   const [scene, setScene] = useState('LOADING');
   const [testEndingType, setTestEndingType] = useState(null);
   const [testEventType, setTestEventType] = useState(null);
-  
-  // 💡 [신규] 앱 전체에서 사용할 글로벌 토스트 알림 상태
   const [toastMessage, setToastMessage] = useState('');
 
+  // 💡 [수정] 백엔드 데이터 스펙에 맞춰 holdings와 tradeLogs(배열), runId를 추가했습니다.
   const [gameData, setGameData] = useState({
+    runId: null,
     day: 1,
     period: 'MORNING',
     money: 250000,
     energy: 2,
+    holdings: [],
+    tradeLogs: []
   });
 
   const { user, login, logout } = useAuthStore();
   const API_BASE_URL = 'http://localhost:8080';
 
-  // 💡 [신규] 토스트 알림을 1.5초간 띄우는 헬퍼 함수
   const showGlobalToast = (message) => {
     setToastMessage(message);
     setTimeout(() => {
@@ -70,14 +69,13 @@ function App() {
       console.error('로그아웃 에러:', e);
     } finally {
       logout();
-      // 💡 [수정] alert 대신 글로벌 토스트 함수를 호출합니다!
       showGlobalToast("안전하게 로그아웃 되었습니다!");
       setScene('AUTH'); 
     }
   };
 
   const resetGame = () => {
-    setGameData({ day: 1, period: 'MORNING', money: 250000, energy: 2 });
+    setGameData({ runId: null, day: 1, period: 'MORNING', money: 250000, energy: 2, holdings: [], tradeLogs: [] });
     setTestEndingType(null);
     setTestEventType(null);
     setScene('MAIN');
@@ -99,7 +97,6 @@ function App() {
   return (
     <div className="game-container" style={{ position: 'relative' }}>
       
-      {/* 💡 [신규] 글로벌 토스트 UI (씬 전환과 무관하게 항상 최상단에 떠 있습니다) */}
       <AnimatePresence>
         {toastMessage && (
           <motion.div
@@ -110,7 +107,7 @@ function App() {
               position: 'absolute', top: 0, left: '50%',
               padding: '15px 30px', backgroundColor: '#e74c3c', border: '4px solid #c0392b',
               color: '#fff', fontSize: '18px', fontWeight: 'bold', borderRadius: '8px',
-              boxShadow: '0 4px 10px rgba(0,0,0,0.5)', zIndex: 9999 // 무조건 최상단
+              boxShadow: '0 4px 10px rgba(0,0,0,0.5)', zIndex: 9999 
             }}
           >
             {toastMessage}
@@ -119,7 +116,6 @@ function App() {
       </AnimatePresence>
 
       <AnimatePresence mode="wait">
-        
         {scene === 'LOADING' && (
           <motion.div key="loading" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="scene-wrapper">
             <LoadingScene onComplete={checkSessionAndNavigate} />
@@ -135,7 +131,11 @@ function App() {
         {scene === 'MAIN' && (
           <motion.div key="main" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="scene-wrapper">
             <MainMenu 
-              onStart={() => setScene('INTRO')} 
+              // 💡 [수정] MainMenu에서 받은 초기 데이터를 gameData에 주입합니다!
+              onStart={(startData) => {
+                setGameData(prev => ({ ...prev, ...startData }));
+                setScene('INTRO');
+              }} 
               onTestEnding={() => setScene('ENDING_TEST')}
               onTestEvent={() => setScene('EVENT_TEST')}
               user={user} 

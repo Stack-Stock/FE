@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { gameApi } from '../api/gameApi'; // 💡 API 파일 임포트
 import '../styles/UIComponents.css'; 
 import '../styles/MainMenu.css';    
 
@@ -12,6 +13,7 @@ const MainMenu = ({ onStart, onTestEnding, onTestEvent, user, onLogout }) => {
   const [prevBgFrame, setPrevBgFrame] = useState(bgSequence[0]);
   const [prevLogoFrame, setPrevLogoFrame] = useState(logoSequence[0]);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false); // 💡 통신 상태
 
   const publicPath = process.env.PUBLIC_URL;
 
@@ -25,9 +27,36 @@ const MainMenu = ({ onStart, onTestEnding, onTestEvent, user, onLogout }) => {
     return () => clearInterval(timer);
   }, [bgIndex, logoIndex]);
 
+  // 💡 [핵심] 게임 시작 API 호출 및 데이터 조립
+  const handleStartGame = async () => {
+    setIsLoading(true);
+    try {
+      // 1. 새 게임 생성 API 호출
+      const response = await gameApi.startGame();
+      
+      // 2. 백엔드 스펙에 맞춘 초기 프론트엔드 데이터 세팅
+      const initGameData = {
+        runId: response.runId,
+        day: response.dayNo,
+        money: response.cashBalance,
+        energy: response.apRemaining,
+        period: 'MORNING',
+        holdings: [], // 새 게임이므로 보유 주식은 빈 배열
+        tradeLogs: [] // 새 게임이므로 거래 로그는 빈 배열
+      };
+
+      // 3. App.js로 올려보내 화면 전환!
+      onStart(initGameData);
+    } catch (error) {
+      console.error("게임 시작 통신 에러:", error);
+      alert("게임을 생성할 수 없습니다. 서버 상태를 확인해 주세요.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="main-menu-container">
-      {/* 1. 배경 & 로고 레이어 */}
       <div className="main-bg-layer">
         <img src={`${publicPath}/assets/main/bg/main_bg_${prevBgFrame}.png`} alt="buffer" className="base-img static-buffer" />
         <AnimatePresence mode="popLayout">
@@ -46,7 +75,6 @@ const MainMenu = ({ onStart, onTestEnding, onTestEvent, user, onLogout }) => {
         </AnimatePresence>
       </div>
 
-      {/* 2. 유저 프로필 */}
       <div className="user-profile-container">
         <div className="profile-block" onClick={() => setIsDropdownOpen(!isDropdownOpen)}>
            <img src={`${publicPath}/assets/ui/user_icon.png`} alt="user" className="profile-icon-img" 
@@ -62,11 +90,11 @@ const MainMenu = ({ onStart, onTestEnding, onTestEvent, user, onLogout }) => {
         </AnimatePresence>
       </div>
 
-      {/* 3. 버튼 레이어 */}
       <div className="main-ui-layer">
         <div className="main-button-group">
-          <button className="retro-block menu-btn-custom" onClick={onStart}>
-            [ 새 게임 시작하기 ]
+          {/* 💡 [수정] 직접 통신 함수(handleStartGame)를 연결했습니다. */}
+          <button className="retro-block menu-btn-custom" onClick={handleStartGame} disabled={isLoading}>
+            {isLoading ? '[ 통신 중... ]' : '[ 새 게임 시작하기 ]'}
           </button>
           <button className="retro-block menu-btn-custom continue-btn" disabled>
             [ 이어하기 (준비중) ]
