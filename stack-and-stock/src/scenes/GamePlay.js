@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import useGameStore from '../store/useGameStore'; // 💡 스토어 임포트
 import StatusBar from '../components/StatusBar';
 import BottomPanel from '../components/BottomPanel';
 import StockModal from '../components/StockModal';
@@ -12,26 +13,28 @@ import SettlementModal from '../components/SettlementModal';
 import ArchiveModal from '../components/ArchiveModal'; 
 import HelpModal from '../components/HelpModal';
 
-// 💡 [수정] Holdings 더미 데이터를 백엔드 DTO(PortfolioStockResponse) 배열 형태로 변경!
-const DUMMY_HOLDINGS = [
-  { stockId: 1, quantity: 5, avgCost: 190000, companyName: "네이벼", ticker: "NAVER" },
-  { stockId: 4, quantity: 10, avgCost: 70000, companyName: "삼송전자", ticker: "SAMSUNG" }
-];
-const DUMMY_SETTLEMENT = { totalChange: 15281, cashChange: 0, stockChange: 15281 };
-const DUMMY_TRADE_LOGS = [
-  { tradeId: 1, dayNo: 2, stockId: 4, company: '삼송전자', quantity: 10, price: 70000, tradeType: 'BUY' },
-  { tradeId: 2, dayNo: 5, stockId: 1, company: '네이벼', quantity: 5, price: 190000, tradeType: 'BUY' },
-  { tradeId: 3, dayNo: 9, stockId: 4, company: '삼송전자', quantity: 2, price: 75000, tradeType: 'SELL' },
-];
+// 💡 스토어로 이관된 데이터(Holdings, Logs 등)의 DUMMY 제거 완료
 const DUMMY_ARCHIVE_DATA = {
   9: [
     { stock: '네이벼', realDate: '2022.10.15', realTitle: '판교 데이터센터 화재 사태', reason: '투자 심리 위축', impact: 'BAD' }
   ]
 };
 
-const DUMMY_SPARK_DATA = { sparkCount: 0, studyCount: 2 };
+// 💡 [수정] 불필요한 data 프롭스 제거
+const GamePlay = ({ onAction, onGoMain }) => {
+  // 💡 스토어에서 게임 상태 직수령
+  const { 
+    day: currentDay, 
+    period, 
+    money: currentMoney, 
+    sparkCount, 
+    studyCount,
+    holdings,
+    tradeLogs,
+    daySummary: settlementData,
+    useEnergy // 💡 행동력 차감 액션 (필요시 연결)
+  } = useGameStore();
 
-const GamePlay = ({ data, onAction, onGoMain }) => {
   const [hoveredObject, setHoveredObject] = useState(null);
   const [isStockOpen, setIsStockOpen] = useState(false);
   const [isNewsOpen, setIsNewsOpen] = useState(false);
@@ -50,29 +53,20 @@ const GamePlay = ({ data, onAction, onGoMain }) => {
   const [pendingTradeData, setPendingTradeData] = useState(null);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
 
-  const safeData = data || {};
-  const currentDay = safeData.day || 10;
-  const timePeriod = safeData.period === 'MORNING' ? 'morning' : 'night';
+  const timePeriod = period === 'MORNING' ? 'morning' : 'night';
   const publicPath = process.env.PUBLIC_URL;
   const bgImage = `${publicPath}/assets/bg/bg_${timePeriod}.png`;
 
   const isStudiedToday = lastStudiedDay === currentDay;
   const isTradedToday = lastTradedDay === currentDay;
 
-  // 💡 데이터가 빈 배열이면 게임 시작 시 에러가 나지 않고 빈 화면이 잘 나옵니다!
-  const currentMoney = safeData.money !== undefined ? safeData.money : 250000;
-  const settlementData = safeData.settlement || DUMMY_SETTLEMENT;
-  const holdingsData = safeData.holdings && safeData.holdings.length >= 0 ? safeData.holdings : DUMMY_HOLDINGS;
-  const tradeLogsData = safeData.tradeLogs && safeData.tradeLogs.length >= 0 ? safeData.tradeLogs : DUMMY_TRADE_LOGS;
-  const archiveData = safeData.archive || DUMMY_ARCHIVE_DATA;
-  const sparkData = safeData.spark || DUMMY_SPARK_DATA;
-
+  // 💡 1일 차가 아니고 스토어에 정산 데이터가 있다면 자동 팝업
   useEffect(() => {
-    if (timePeriod === 'morning' && currentDay > 1 && currentDay > lastPopupDay) {
+    if (timePeriod === 'morning' && currentDay > 1 && currentDay > lastPopupDay && settlementData) {
       setIsSettlementOpen(true);
       setLastPopupDay(currentDay);
     }
-  }, [currentDay, timePeriod, lastPopupDay]);
+  }, [currentDay, timePeriod, lastPopupDay, settlementData]);
 
   const FINAL_BG_X = 0, FINAL_BG_Y = -65, FINAL_BG_SCALE = 100; 
   const FINAL_ASSET_CONFIG = {
@@ -117,17 +111,19 @@ const GamePlay = ({ data, onAction, onGoMain }) => {
 
   return (
     <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', backgroundColor: '#000', boxSizing: 'border-box', position: 'relative' }}>
-      <StatusBar data={{...safeData, money: currentMoney}} />
+      
+      {/* 💡 StatusBar도 이제 스토어를 직접 보게 수정될 예정이라 data를 넘길 필요 없어집니다 (다음 단계) */}
+      <StatusBar />
 
       <div style={{ flex: 1, position: 'relative', backgroundColor: timePeriod === 'morning' ? '#87CEEB' : '#2c3e50', backgroundImage: `url(${bgImage})`, backgroundRepeat: 'no-repeat', backgroundPosition: `${FINAL_BG_X}px ${FINAL_BG_Y}px`, backgroundSize: `${FINAL_BG_SCALE}%`, imageRendering: 'pixelated', display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'hidden' }}>
         
         <div style={{ position: 'absolute', top: '20px', left: '30px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px', zIndex: 1000 }}>
-          <button style={{ width: '55px', height: '55px', backgroundColor: 'transparent', border: 'none', padding: 0, cursor: sparkData.sparkCount > 0 ? 'pointer' : 'not-allowed', filter: sparkData.sparkCount > 0 ? 'drop-shadow(2px 2px 0px rgba(0,0,0,0.5))' : 'grayscale(100%) opacity(0.7) drop-shadow(2px 2px 0px rgba(0,0,0,0.5))', transition: 'all 0.2s', transform: sparkData.sparkCount > 0 ? 'scale(1)' : 'scale(0.95)' }} disabled={sparkData.sparkCount === 0} onClick={() => { if (sparkData.sparkCount > 0) console.log('번뜩임 사용'); }}>
+          <button style={{ width: '55px', height: '55px', backgroundColor: 'transparent', border: 'none', padding: 0, cursor: sparkCount > 0 ? 'pointer' : 'not-allowed', filter: sparkCount > 0 ? 'drop-shadow(2px 2px 0px rgba(0,0,0,0.5))' : 'grayscale(100%) opacity(0.7) drop-shadow(2px 2px 0px rgba(0,0,0,0.5))', transition: 'all 0.2s', transform: sparkCount > 0 ? 'scale(1)' : 'scale(0.95)' }} disabled={sparkCount === 0} onClick={() => { if (sparkCount > 0) console.log('번뜩임 사용'); }}>
             <img src={`${publicPath}/assets/ui/spark_icon.png`} alt="번뜩임" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
           </button>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <span style={{ color: sparkData.sparkCount > 0 ? '#FFD700' : '#aaa', fontSize: '14px', fontWeight: 'bold', marginBottom: '1px', ...textShadowStyle }}>번뜩임: {sparkData.sparkCount}</span>
-            <span style={{ color: '#fff', fontSize: '12px', fontWeight: 'bold', ...textShadowStyle }}>공부: {sparkData.studyCount}/3</span>
+            <span style={{ color: sparkCount > 0 ? '#FFD700' : '#aaa', fontSize: '14px', fontWeight: 'bold', marginBottom: '1px', ...textShadowStyle }}>번뜩임: {sparkCount}</span>
+            <span style={{ color: '#fff', fontSize: '12px', fontWeight: 'bold', ...textShadowStyle }}>공부: {studyCount}/3</span>
           </div>
         </div>
 
@@ -140,16 +136,17 @@ const GamePlay = ({ data, onAction, onGoMain }) => {
         <RoomAssets config={FINAL_ASSET_CONFIG} period={timePeriod} hoveredObject={hoveredObject} onHover={setHoveredObject} onInteract={handleInteract} isStudiedToday={isStudiedToday} />
       </div>
 
-      <BottomPanel data={safeData} hoveredObject={hoveredObject} onHover={setHoveredObject} onInteract={handleInteract} isStudiedToday={isStudiedToday} />
+      <BottomPanel data={{ money: currentMoney, energy: useGameStore.getState().energy, day: currentDay, period }} hoveredObject={hoveredObject} onHover={setHoveredObject} onInteract={handleInteract} isStudiedToday={isStudiedToday} />
       <EnergyConfirmModal isOpen={confirmConfig.isOpen} config={confirmConfig} onConfirm={handleConfirmAction} onClose={() => setConfirmConfig({ isOpen: false, type: '', cost: 0, title: '', actionText: '' })} />
       <NewsModal isOpen={isNewsOpen} onClose={() => setIsNewsOpen(false)} day={currentDay} />
       <PhoneModal isOpen={isPhoneOpen} onClose={() => setIsPhoneOpen(false)} day={currentDay} />
       <TvModal isOpen={isTvOpen} onClose={() => setIsTvOpen(false)} day={currentDay} />
       <StudyModal isOpen={isStudyOpen} onClose={() => setIsStudyOpen(false)} />
 
-      <StockModal isOpen={isStockOpen} onClose={() => setIsStockOpen(false)} day={currentDay} money={currentMoney} holdings={holdingsData} isTradedToday={isTradedToday} onConfirmTrade={(tradeData) => { setPendingTradeData(tradeData); setConfirmConfig({ isOpen: true, type: 'LAPTOP', cost: 1, title: '투자 진행', actionText: '확정' }); }} />
-      <SettlementModal isOpen={isSettlementOpen} onClose={() => setIsSettlementOpen(false)} day={currentDay} settlementData={settlementData} currentMoney={currentMoney} holdings={holdingsData} tradeLogs={tradeLogsData} />
-      <ArchiveModal isOpen={isArchiveOpen} onClose={() => setIsArchiveOpen(false)} currentDay={currentDay} archiveData={archiveData} />
+      {/* 💡 모달들도 추후 스토어 구독으로 바꾸면 프롭스 지옥에서 탈출합니다 */}
+      <StockModal isOpen={isStockOpen} onClose={() => setIsStockOpen(false)} day={currentDay} money={currentMoney} holdings={holdings} isTradedToday={isTradedToday} onConfirmTrade={(tradeData) => { setPendingTradeData(tradeData); setConfirmConfig({ isOpen: true, type: 'LAPTOP', cost: 1, title: '투자 진행', actionText: '확정' }); }} />
+      <SettlementModal isOpen={isSettlementOpen} onClose={() => setIsSettlementOpen(false)} day={currentDay} settlementData={settlementData} currentMoney={currentMoney} holdings={holdings} tradeLogs={tradeLogs} />
+      <ArchiveModal isOpen={isArchiveOpen} onClose={() => setIsArchiveOpen(false)} currentDay={currentDay} archiveData={DUMMY_ARCHIVE_DATA} />
       <HelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
 
     </div>

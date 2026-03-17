@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { gameApi } from '../api/gameApi'; // 💡 API 파일 임포트
+import { gameApi } from '../api/gameApi';
+import useGameStore from '../store/useGameStore'; // 💡 스토어 임포트
 import '../styles/UIComponents.css'; 
 import '../styles/MainMenu.css';    
 
@@ -13,9 +14,12 @@ const MainMenu = ({ onStart, onTestEnding, onTestEvent, user, onLogout }) => {
   const [prevBgFrame, setPrevBgFrame] = useState(bgSequence[0]);
   const [prevLogoFrame, setPrevLogoFrame] = useState(logoSequence[0]);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false); // 💡 통신 상태
+  const [isLoading, setIsLoading] = useState(false);
 
   const publicPath = process.env.PUBLIC_URL;
+  
+  // 💡 스토어에서 1일 차 초기화 액션 가져오기
+  const initNewGame = useGameStore((state) => state.initNewGame);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -27,26 +31,16 @@ const MainMenu = ({ onStart, onTestEnding, onTestEvent, user, onLogout }) => {
     return () => clearInterval(timer);
   }, [bgIndex, logoIndex]);
 
-  // 💡 [핵심] 게임 시작 API 호출 및 데이터 조립
   const handleStartGame = async () => {
     setIsLoading(true);
     try {
-      // 1. 새 게임 생성 API 호출
       const response = await gameApi.startGame();
       
-      // 2. 백엔드 스펙에 맞춘 초기 프론트엔드 데이터 세팅
-      const initGameData = {
-        runId: response.runId,
-        day: response.dayNo,
-        money: response.cashBalance,
-        energy: response.apRemaining,
-        period: 'MORNING',
-        holdings: [], // 새 게임이므로 보유 주식은 빈 배열
-        tradeLogs: [] // 새 게임이므로 거래 로그는 빈 배열
-      };
+      // 💡 [핵심] 스토어 액션으로 데이터 세팅 (이제 App.js로 복잡하게 넘길 필요 없음!)
+      initNewGame(response);
 
-      // 3. App.js로 올려보내 화면 전환!
-      onStart(initGameData);
+      // 세팅 끝났으니 씬 전환만 지시
+      onStart();
     } catch (error) {
       console.error("게임 시작 통신 에러:", error);
       alert("게임을 생성할 수 없습니다. 서버 상태를 확인해 주세요.");
@@ -92,7 +86,6 @@ const MainMenu = ({ onStart, onTestEnding, onTestEvent, user, onLogout }) => {
 
       <div className="main-ui-layer">
         <div className="main-button-group">
-          {/* 💡 [수정] 직접 통신 함수(handleStartGame)를 연결했습니다. */}
           <button className="retro-block menu-btn-custom" onClick={handleStartGame} disabled={isLoading}>
             {isLoading ? '[ 통신 중... ]' : '[ 새 게임 시작하기 ]'}
           </button>

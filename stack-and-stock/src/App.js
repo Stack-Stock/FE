@@ -2,8 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import './styles/App.css';
 
+// 💡 스토어 가져오기
 import useAuthStore from './store/useAuthStore';
+import useGameStore from './store/useGameStore'; // 신규 게임 스토어 임포트
 
+// 씬 컴포넌트들
 import LoadingScene from './scenes/LoadingScene';
 import AuthScene from './scenes/AuthScene'; 
 import MainMenu from './components/MainMenu';
@@ -18,16 +21,9 @@ function App() {
   const [testEventType, setTestEventType] = useState(null);
   const [toastMessage, setToastMessage] = useState('');
 
-  // 💡 [수정] 백엔드 데이터 스펙에 맞춰 holdings와 tradeLogs(배열), runId를 추가했습니다.
-  const [gameData, setGameData] = useState({
-    runId: null,
-    day: 1,
-    period: 'MORNING',
-    money: 250000,
-    energy: 2,
-    holdings: [],
-    tradeLogs: []
-  });
+  // 💡 [핵심 수정] 무거운 gameData 상태가 삭제되었습니다!
+  // 대신 스토어에서 상태와 액션을 직접 꺼내옵니다.
+  const { period, day, nextPeriod, resetGame } = useGameStore();
 
   const { user, login, logout } = useAuthStore();
   const API_BASE_URL = 'http://localhost:8080';
@@ -74,8 +70,8 @@ function App() {
     }
   };
 
-  const resetGame = () => {
-    setGameData({ runId: null, day: 1, period: 'MORNING', money: 250000, energy: 2, holdings: [], tradeLogs: [] });
+  const handleResetGame = () => {
+    resetGame(); // 💡 스토어 초기화 액션 호출
     setTestEndingType(null);
     setTestEventType(null);
     setScene('MAIN');
@@ -131,11 +127,8 @@ function App() {
         {scene === 'MAIN' && (
           <motion.div key="main" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="scene-wrapper">
             <MainMenu 
-              // 💡 [수정] MainMenu에서 받은 초기 데이터를 gameData에 주입합니다!
-              onStart={(startData) => {
-                setGameData(prev => ({ ...prev, ...startData }));
-                setScene('INTRO');
-              }} 
+              // 💡 [수정] 데이터 저장은 MainMenu 내부에서 스토어 액션으로 알아서 하므로, 여기서는 그냥 씬 전환만 합니다!
+              onStart={() => setScene('INTRO')} 
               onTestEnding={() => setScene('ENDING_TEST')}
               onTestEvent={() => setScene('EVENT_TEST')}
               user={user} 
@@ -193,13 +186,18 @@ function App() {
         {scene === 'PLAY' && (
           <motion.div key="play" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="scene-wrapper">
             <GamePlay 
-              data={gameData} 
+              // 💡 [핵심 수정] 무거운 data={gameData} 프롭스 전달 삭제! GamePlay가 스토어에서 직접 꺼내 쓸 겁니다.
               onAction={() => {
-                setGameData(prev => {
-                  if (prev.period === 'MORNING') return { ...prev, period: 'AFTERNOON' };
-                  if (prev.day >= 10) { setScene('ENDING'); return prev; }
-                  return { ...prev, day: prev.day + 1, period: 'MORNING' };
-                });
+                if (period === 'MORNING') {
+                  nextPeriod(); // 💡 스토어의 액션 사용 (아침 -> 낮)
+                } else {
+                  if (day >= 10) { 
+                    setScene('ENDING'); 
+                  } else {
+                    // 💡 여기에 나중에 "다음 날로 넘어가면서 API 재호출(getDailyStart)" 하는 로직이 추가될 예정!
+                    console.log("다음 날로 넘어갑니다!");
+                  }
+                }
               }} 
               onGoMain={() => setScene('MAIN')} 
             />
@@ -208,7 +206,7 @@ function App() {
 
         {scene === 'ENDING' && (
           <motion.div key="ending" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="scene-wrapper">
-            <EndingScene onRestart={resetGame} forcedType={testEndingType} />
+            <EndingScene onRestart={handleResetGame} forcedType={testEndingType} />
           </motion.div>
         )}
       </AnimatePresence>
