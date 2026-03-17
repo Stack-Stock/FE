@@ -5,6 +5,7 @@ import './styles/App.css';
 // 💡 스토어 가져오기
 import useAuthStore from './store/useAuthStore';
 import useGameStore from './store/useGameStore'; // 신규 게임 스토어 임포트
+import { gameApi } from './api/gameApi'; // 💡 [추가] gameApi 임포트 필수!
 
 // 씬 컴포넌트들
 import LoadingScene from './scenes/LoadingScene';
@@ -23,7 +24,7 @@ function App() {
 
   // 💡 [핵심 수정] 무거운 gameData 상태가 삭제되었습니다!
   // 대신 스토어에서 상태와 액션을 직접 꺼내옵니다.
-  const { period, day, nextPeriod, resetGame } = useGameStore();
+  const { period, day, nextPeriod, resetGame, runId, setDailyStartData } = useGameStore();
 
   const { user, login, logout } = useAuthStore();
   const API_BASE_URL = 'http://localhost:8080';
@@ -186,16 +187,37 @@ function App() {
         {scene === 'PLAY' && (
           <motion.div key="play" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="scene-wrapper">
             <GamePlay 
-              // 💡 [핵심 수정] 무거운 data={gameData} 프롭스 전달 삭제! GamePlay가 스토어에서 직접 꺼내 쓸 겁니다.
-              onAction={() => {
+              // 💡 [핵심 수정] 침대를 눌렀을 때의 동작
+              onAction={async () => {
                 if (period === 'MORNING') {
-                  nextPeriod(); // 💡 스토어의 액션 사용 (아침 -> 낮)
+                  nextPeriod(); // 아침 -> 저녁으로 시간대 변경
                 } else {
                   if (day >= 10) { 
                     setScene('ENDING'); 
                   } else {
-                    // 💡 여기에 나중에 "다음 날로 넘어가면서 API 재호출(getDailyStart)" 하는 로직이 추가될 예정!
-                    console.log("다음 날로 넘어갑니다!");
+                    // 🌙 [나중에 추가할 곳] 수면 트랜지션 (화면 암전 등) 시작
+
+                    try {
+                      // 1. 백엔드에 수면(하루 종료) 요청!
+                      const actionRes = await gameApi.executeAction('SLEEP');
+                      console.log("수면 처리 완료:", actionRes.message);
+
+                      // 2. 수면이 완료되었으므로, 다음 날(ex: 2일 차) 데이터 싹 긁어오기!
+                      const nextDayData = await gameApi.getDailyStart(runId);
+                      console.log("다음 날 데이터 수신:", nextDayData);
+                      
+                      // 3. 긁어온 데이터를 전역 스토어에 냅다 들이붓기 (알아서 화면이 2일 차로 바뀜!)
+                      setDailyStartData(nextDayData);
+                      
+                      // 안내 메시지
+                      showGlobalToast(`${nextDayData.portfolio.currentDayNo}일 차 아침이 밝았습니다!`);
+
+                      // ☀️ [나중에 추가할 곳] 수면 트랜지션 해제 (화면 밝아짐)
+
+                    } catch (error) {
+                      console.error("다음 날 넘어가기 실패:", error);
+                      showGlobalToast("수면 처리 중 서버 통신 에러가 발생했습니다.");
+                    }
                   }
                 }
               }} 
