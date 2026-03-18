@@ -170,14 +170,14 @@ const MainMenu = ({ onStart, onTestEnding, onTestEvent, user, onLogout }) => {
             onClick={handleContinueGame} 
             disabled={!hasSaveData || isLoading}
             style={{
-              backgroundColor: hasSaveData ? '#2e86de' : '#333',
+              backgroundColor: hasSaveData ? '' : '#333',
               color: hasSaveData ? '#fff' : '#666',
-              border: hasSaveData ? '3px solid #000' : '3px solid #222',
-              cursor: hasSaveData ? 'pointer' : 'not-allowed',
+              border: hasSaveData ? '' : '3px solid #222',
+              cursor: hasSaveData ? '' : 'not-allowed',
               boxShadow: hasSaveData ? '2px 2px 0 #000' : 'none'
             }}
           >
-            {hasSaveData ? '[ 이어하기 ]' : '[ 이어하기 (데이터 없음) ]'}
+            {hasSaveData ? '[ 이어하기 ]' : '[ 이어하기 ]'}
           </button>
           
           <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>

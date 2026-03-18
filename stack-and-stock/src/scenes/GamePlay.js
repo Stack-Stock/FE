@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import useGameStore from '../store/useGameStore'; // 💡 스토어 임포트
+import { gameApi } from '../api/gameApi';
 import StatusBar from '../components/StatusBar';
 import BottomPanel from '../components/BottomPanel';
 import StockModal from '../components/StockModal';
@@ -53,6 +54,11 @@ const GamePlay = ({ onAction, onGoMain }) => {
   const [pendingTradeData, setPendingTradeData] = useState(null);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
 
+  // 💡 [신규] API에서 받아온 각 매체의 실제 텍스트 내용을 저장할 State
+  const [phoneContent, setPhoneContent] = useState("");
+  const [tvContent, setTvContent] = useState("");
+  const [newsContent, setNewsContent] = useState("");
+
   const timePeriod = period === 'MORNING' ? 'morning' : 'night';
   const publicPath = process.env.PUBLIC_URL;
   const bgImage = `${publicPath}/assets/bg/bg_${timePeriod}.png`;
@@ -79,11 +85,45 @@ const GamePlay = ({ onAction, onGoMain }) => {
     LAPTOP: { x: 277, y: 278, w: 75, h: 62, scale: 272 },
   };
 
+// 💡 [핵심] 통합 API 호출 함수 (행동력 차감 + 모달 내용 세팅 + 스토어 업데이트)
+  const executeInfoAction = async (actionType) => {
+    try {
+      const res = await gameApi.executeAction(actionType);
+      
+      // 스토어의 행동력과 돈 동기화
+      useGameStore.setState({ energy: res.apRemaining, money: res.cashBalance });
+
+      if (actionType === 'INFO_PHONE') {
+        setPhoneContent(res.message); // 백엔드에서 준 실제 기사 텍스트
+        setIsPhoneOpen(true);
+      } else if (actionType === 'INFO_TV') {
+        setTvContent(res.message);
+        setLastWatchedTvDay(currentDay);
+        setIsTvOpen(true);
+      } else if (actionType === 'INFO_PAPER') {
+        setNewsContent(res.message);
+        setLastReadNewsDay(currentDay);
+        setIsNewsOpen(true);
+      } else if (actionType === 'STUDY') {
+        setLastStudiedDay(currentDay);
+        // 스토어의 studyCount 증가
+        useGameStore.setState(state => ({ studyCount: state.studyCount + 1 }));
+        setIsStudyOpen(true);
+      }
+    } catch (error) {
+      const errorMsg = error.response?.data?.message || "행동을 실행할 수 없습니다.";
+      alert(errorMsg); // AP 부족이나 이미 공부한 경우 백엔드 에러 띄우기
+    }
+  };
+
   const handleInteract = (id) => {
     if (id === 'BED') onAction(); 
     else if (id === 'LAPTOP') setIsStockOpen(true); 
-    else if (id === 'PHONE') setIsPhoneOpen(true); 
-    else if (id === 'NEWSPAPER') {
+    else if (id === 'PHONE') {
+      // 폰은 AP 소모가 없으므로 바로 API 호출 (이미 호출했다면 모달만 띄움)
+      if (phoneContent) setIsPhoneOpen(true);
+      else executeInfoAction('INFO_PHONE');
+    } else if (id === 'NEWSPAPER') {
       if (lastReadNewsDay === currentDay) setIsNewsOpen(true);
       else setConfirmConfig({ isOpen: true, type: 'NEWSPAPER', cost: 2, title: '신문', actionText: '확인' }); 
     } else if (id === 'TV') {
@@ -94,16 +134,19 @@ const GamePlay = ({ onAction, onGoMain }) => {
     }
   };
 
+  // 💡 모달에서 "확인" 눌렀을 때 API 호출로 변경
   const handleConfirmAction = () => {
-    if (confirmConfig.type === 'NEWSPAPER') { setLastReadNewsDay(currentDay); setIsNewsOpen(true); } 
-    else if (confirmConfig.type === 'TV') { setLastWatchedTvDay(currentDay); setIsTvOpen(true); } 
-    else if (confirmConfig.type === 'DESK') { setLastStudiedDay(currentDay); setIsStudyOpen(true); } 
-    else if (confirmConfig.type === 'LAPTOP') {
+    const type = confirmConfig.type;
+    setConfirmConfig({ isOpen: false, type: '', cost: 0, title: '', actionText: '' }); 
+
+    if (type === 'NEWSPAPER') executeInfoAction('INFO_PAPER');
+    else if (type === 'TV') executeInfoAction('INFO_TV');
+    else if (type === 'DESK') executeInfoAction('STUDY');
+    else if (type === 'LAPTOP') {
       setLastTradedDay(currentDay);
       setIsStockOpen(false); 
       setPendingTradeData(null); 
     }
-    setConfirmConfig({ isOpen: false, type: '', cost: 0, title: '', actionText: '' }); 
   };
 
   const circleBtnStyle = { width: '45px', height: '45px', borderRadius: '50%', border: '3px solid #000', color: '#fff', fontWeight: 'bold', fontSize: '20px', display: 'flex', justifyContent: 'center', alignItems: 'center' };
@@ -138,9 +181,9 @@ const GamePlay = ({ onAction, onGoMain }) => {
 
       <BottomPanel data={{ money: currentMoney, energy: useGameStore.getState().energy, day: currentDay, period }} hoveredObject={hoveredObject} onHover={setHoveredObject} onInteract={handleInteract} isStudiedToday={isStudiedToday} />
       <EnergyConfirmModal isOpen={confirmConfig.isOpen} config={confirmConfig} onConfirm={handleConfirmAction} onClose={() => setConfirmConfig({ isOpen: false, type: '', cost: 0, title: '', actionText: '' })} />
-      <NewsModal isOpen={isNewsOpen} onClose={() => setIsNewsOpen(false)} day={currentDay} />
-      <PhoneModal isOpen={isPhoneOpen} onClose={() => setIsPhoneOpen(false)} day={currentDay} />
-      <TvModal isOpen={isTvOpen} onClose={() => setIsTvOpen(false)} day={currentDay} />
+      <NewsModal isOpen={isNewsOpen} onClose={() => setIsNewsOpen(false)} day={currentDay} content={newsContent} />
+      <PhoneModal isOpen={isPhoneOpen} onClose={() => setIsPhoneOpen(false)} day={currentDay} content={phoneContent} />
+      <TvModal isOpen={isTvOpen} onClose={() => setIsTvOpen(false)} day={currentDay} content={tvContent} />
       <StudyModal isOpen={isStudyOpen} onClose={() => setIsStudyOpen(false)} />
 
       {/* 💡 모달들도 추후 스토어 구독으로 바꾸면 프롭스 지옥에서 탈출합니다 */}
