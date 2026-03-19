@@ -21,7 +21,8 @@ const MainMenu = ({ onStart, onTestEnding, onTestEvent, user, onLogout }) => {
   const publicPath = process.env.PUBLIC_URL;
   const loadingBgImage = `${publicPath}/assets/auth/auth_bg.png`;
   
-  const { initNewGame, setDailyStartData, showToast } = useGameStore();
+  // 💡 [추가] setDemoMode 가져오기
+  const { initNewGame, setDailyStartData, showToast, setDemoMode } = useGameStore();
   const hasSaveData = user?.canContinue === true; 
 
   useEffect(() => {
@@ -35,23 +36,41 @@ const MainMenu = ({ onStart, onTestEnding, onTestEvent, user, onLogout }) => {
   }, [bgIndex, logoIndex]);
 
   const executeStartGame = async () => {
-    setIsLoading(true); // 💡 로딩 시작!
+    setIsLoading(true); 
     setShowWarningModal(false);
     try {
-      // 1. 방 만들기 (새 게임 생성 API 호출)
+      setDemoMode(false); // 💡 일반 게임이므로 데모 모드 끄기
       const response = await gameApi.startGame();
       initNewGame(response);
 
-      // 💡 [핵심 원인 해결!!] 2. 생성된 runId로 1일 차 '하루 시작 데이터'를 가져옵니다!
       const dailyData = await gameApi.getDailyStart(response.runId);
-      setDailyStartData(dailyData); // 👉 여기서 드디어 주식 목록이 스토어에 꽂힙니다!
+      setDailyStartData(dailyData); 
 
-      onStart(); // 인트로 및 게임 씬으로 이동
+      onStart(); 
     } catch (error) {
       console.error("게임 시작 통신 에러:", error);
       alert("게임을 생성할 수 없습니다. 서버 상태를 확인해 주세요.");
     } finally {
-      setIsLoading(false); // 💡 로딩 종료!
+      setIsLoading(false); 
+    }
+  };
+
+  // 💡 [추가] 데모 플레이 시작 로직
+  const handleDemoPlay = async () => {
+    setIsLoading(true); 
+    try {
+      setDemoMode(true); // 💡 데모 모드 켜기! (이후 API 통신은 demoApi.js로 빠짐)
+      const response = await gameApi.startGame();
+      initNewGame(response);
+
+      const dailyData = await gameApi.getDailyStart(response.runId);
+      setDailyStartData(dailyData); 
+
+      onStart(); 
+    } catch (error) {
+      alert("데모 게임을 실행할 수 없습니다.");
+    } finally {
+      setIsLoading(false); 
     }
   };
 
@@ -66,6 +85,7 @@ const MainMenu = ({ onStart, onTestEnding, onTestEvent, user, onLogout }) => {
   const handleContinueGame = async () => {
     setIsLoading(true); 
     try {
+      setDemoMode(false); // 💡 이어하기도 일반 모드
       const continueInfo = await gameApi.continueRun();
       const dailyData = await gameApi.getDailyStart(continueInfo.runId);
       
@@ -77,7 +97,6 @@ const MainMenu = ({ onStart, onTestEnding, onTestEvent, user, onLogout }) => {
       });
       setDailyStartData(dailyData);
       
-      // 💡 [핵심] 이어하기로 들어온 날이 9번 이벤트(양심의 가책) 날이면 토스트 띄우기
       if (dailyData.randomEventId === 9) {
         showToast("양심의 가책을 느껴, 기운이 없습니다...", "error");
       }
@@ -156,14 +175,24 @@ const MainMenu = ({ onStart, onTestEnding, onTestEvent, user, onLogout }) => {
 
       <div className="main-ui-layer">
         <div className="main-button-group">
+          
           <button className="retro-block menu-btn-custom" onClick={handleNewGameClick} disabled={isLoading}>
             {isLoading ? '[ 통신 중... ]' : '[ 새 게임 시작하기 ]'}
           </button>
+          
           <button 
             className="retro-block menu-btn-custom continue-btn" onClick={handleContinueGame} disabled={!hasSaveData || isLoading}
             style={{ backgroundColor: hasSaveData ? '' : '#333', color: hasSaveData ? '#fff' : '#666', border: hasSaveData ? '' : '3px solid #222', cursor: hasSaveData ? '' : 'not-allowed', boxShadow: hasSaveData ? '2px 2px 0 #000' : 'none' }}
           >
             {hasSaveData ? '[ 이어하기 ]' : '[ 이어하기 ]'}
+          </button>
+          
+          {/* 💡 [추가] 데모 플레이 버튼 (초록색 포인트) */}
+          <button 
+            className="retro-block menu-btn-custom" onClick={handleDemoPlay} disabled={isLoading}
+            style={{ backgroundColor: '#27ae60', border: '3px solid #1e8449', marginTop: '10px' }}
+          >
+            [ 데모 플레이 (5Days) ]
           </button>
           
           <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>

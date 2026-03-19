@@ -1,7 +1,10 @@
 import api from './axiosClient';
+import useGameStore from '../store/useGameStore'; // 💡 스토어 가져오기
+import { demoApi } from './demoApi'; // 💡 데모 API 가져오기
 
 export const gameApi = {
   startGame: async () => {
+    if (useGameStore.getState().isDemoMode) return demoApi.startGame(); // 💡 가로채기
     const response = await api.post('/api/runs/new');
     return response.data;
   },
@@ -10,10 +13,12 @@ export const gameApi = {
     return response.data;
   },
   getCurrentPortfolio: async () => {
+    if (useGameStore.getState().isDemoMode) return demoApi.getCurrentPortfolio();
     const response = await api.get('/api/runs/current/portfolio');
     return response.data;
   },
   getDailyStart: async (runId) => {
+    if (useGameStore.getState().isDemoMode) return demoApi.getDailyStart(runId);
     const response = await api.get(`/api/runs/${runId}/daily-start`);
     return response.data;
   },
@@ -22,6 +27,7 @@ export const gameApi = {
     if (stockId !== null) payload.stockId = stockId;
     if (quantity !== null) payload.quantity = quantity;
 
+    if (useGameStore.getState().isDemoMode) return demoApi.executeAction(payload);
     const response = await api.post('/api/actions', payload);
     return response.data;
   },
@@ -35,10 +41,8 @@ export const gameApi = {
     const response = await api.post('/api/scenarios/guilty', payload);
     return response.data;
   },
-  
-  // 💡 [신규] 다중 주식 거래 체결 (장바구니 방식)
   executeTrade: async (tradeRequest) => {
-    // tradeRequest 형태: { orders: [ { stockId: 3, side: 'BUY', quantity: 10 }, ... ] }
+    if (useGameStore.getState().isDemoMode) return demoApi.executeTrade(tradeRequest);
     const response = await api.post('/api/trades/execute', tradeRequest);
     return response.data;
   }
