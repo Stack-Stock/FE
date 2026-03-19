@@ -1,21 +1,16 @@
 import React, { useState, useRef } from 'react';
 
-const StockList = ({ stocks, selectedStock, onSelectStock, localHoldings }) => {
+const StockList = ({ stocks, selectedStock, onSelectStock }) => {
+  // 백엔드에서 industry(산업군) 필드를 주지 않으므로, 전체 보기만 유지합니다.
   const [filter, setFilter] = useState('전체');
   const scrollRef = useRef(null);
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
 
-  // 💡 [수정] DB 데이터의 "industry" 필드를 사용하여 산업군 리스트 추출
-  const industries = ['전체', ...new Set(stocks.map(s => s.industry || '기타'))];
+  const filteredStocks = stocks; // 현재는 필터 없이 전체 표시
 
-  // 💡 [수정] "industry" 필드로 필터링
-  const filteredStocks = filter === '전체' 
-    ? stocks 
-    : stocks.filter(s => (s.industry || '기타') === filter);
-
-  // 드래그 스크롤 핸들러
+  // 드래그 스크롤 핸들러 (추후 탭 확장 시 사용)
   const onDragStart = (e) => {
     setIsDragging(true);
     setStartX(e.pageX - scrollRef.current.offsetLeft);
@@ -33,7 +28,7 @@ const StockList = ({ stocks, selectedStock, onSelectStock, localHoldings }) => {
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', backgroundColor: '#1a1a2e', border: '3px solid #2f3640', borderRadius: '8px', overflow: 'hidden' }}>
       
-      {/* 산업군 필터 탭 (드래그 가능) */}
+      {/* 탭 영역 (현재는 '전체' 하나만 고정) */}
       <div 
         ref={scrollRef}
         className="hide-scrollbar" 
@@ -44,45 +39,41 @@ const StockList = ({ stocks, selectedStock, onSelectStock, localHoldings }) => {
           cursor: isDragging ? 'grabbing' : 'grab', userSelect: 'none'
         }}
       >
-        {industries.map(ind => (
-          <button key={ind} onClick={() => setFilter(ind)}
-            style={{
-              padding: '6px 12px', fontWeight: 'bold', fontSize: '13px',
-              backgroundColor: filter === ind ? '#e94560' : '#222', color: filter === ind ? '#fff' : '#aaa',
-              border: filter === ind ? '2px solid #fff' : '2px solid #444', borderRadius: '4px',
-              cursor: 'pointer', pointerEvents: isDragging ? 'none' : 'auto'
-            }}
-          >
-            {ind}
-          </button>
-        ))}
+        <button 
+          style={{
+            padding: '6px 12px', fontWeight: 'bold', fontSize: '13px',
+            backgroundColor: '#e94560', color: '#fff',
+            border: '2px solid #fff', borderRadius: '4px',
+            cursor: 'pointer', pointerEvents: isDragging ? 'none' : 'auto'
+          }}
+        >
+          전체
+        </button>
       </div>
 
       {/* 주식 리스트 본문 */}
       <div className="retro-scrollbar" style={{ flex: 1, overflowY: 'auto', padding: '8px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
         {filteredStocks.map(stock => {
-          // 💡 [핵심] 보내주신 JSON 데이터 필드명으로 정확히 매핑
-          const sId = stock.stock_id;        // DB: stock_id
-          const sName = stock.company;       // DB: company
-          const currentPrice = stock.closePrice || 0; // DB에 포함되어 있어야 함
           
-          // DB의 game_return은 소수점 형태(예: -0.0147)이므로 100을 곱해 퍼센트로 표시
-          const changeRate = (stock.game_return * 100) || 0;
+          // 💡 [핵심] TradingStockResponse 스펙과 100% 동일하게 매핑
+          const sId = stock.stockId;           // 종목 ID
+          const sName = stock.company;         // 회사명
+          const currentPrice = stock.currentPrice || 0; // 현재 가격
+          const quantity = stock.myQuantity || 0;       // 내 보유 수량 (백엔드가 계산해줌!)
+          
+          // returnPct (예: 0.0125 -> 1.25%)
+          const changeRate = (stock.returnPct * 100) || 0;
           const isUp = changeRate >= 0;
-
-          // 현재 보유 수량 확인 (localHoldings 배열에서 매칭되는 stockId 찾기)
-          const holding = localHoldings.find(h => h.stockId === sId);
-          const quantity = holding?.quantity || 0;
 
           return (
             <div 
               key={sId} 
-              className={`stock-list-item ${selectedStock?.stock_id === sId ? 'selected' : ''}`}
+              className={`stock-list-item ${selectedStock?.stockId === sId ? 'selected' : ''}`}
               onClick={() => onSelectStock(stock)}
               style={{ 
                 padding: '10px', 
-                backgroundColor: selectedStock?.stock_id === sId ? '#2c3e50' : '#222', 
-                border: selectedStock?.stock_id === sId ? '2px solid #fff' : '2px solid #444', 
+                backgroundColor: selectedStock?.stockId === sId ? '#2c3e50' : '#222', 
+                border: selectedStock?.stockId === sId ? '2px solid #fff' : '2px solid #444', 
                 borderRadius: '6px', display: 'flex', flexDirection: 'column', gap: '4px',
                 cursor: 'pointer',
                 transition: 'background-color 0.2s'

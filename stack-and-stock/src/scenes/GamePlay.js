@@ -18,6 +18,16 @@ const DUMMY_ARCHIVE_DATA = {
   9: [{ stock: '네이벼', realDate: '2022.10.15', realTitle: '판교 데이터센터 화재 사태', reason: '투자 심리 위축', impact: 'BAD' }]
 };
 
+const FINAL_ASSET_CONFIG = {
+  WINDOW: { x: 480, y: 40, w: 230, h: 150, scale: 155 },
+  TV: { x: 240, y: 160, w: 140, h: 100, scale: 240 },
+  BED: { x: 743, y: 206, w: 206, h: 141, scale: 293 },
+  DESK: { x: -270, y: 340, w: 900, h: 225, scale: 143 },
+  NEWSPAPER: { x: 468, y: 361, w: 83, h: 45, scale: 191 },
+  PHONE: { x: 192, y: 353, w: 330, h: 374, scale: 26 },
+  LAPTOP: { x: 277, y: 278, w: 75, h: 62, scale: 272 },
+};
+
 const GamePlay = ({ onAction, onGoMain }) => {
   const { 
     runId, day: currentDay, period, money: currentMoney, 
@@ -105,7 +115,7 @@ const GamePlay = ({ onAction, onGoMain }) => {
       if (phoneContent) setIsPhoneOpen(true);
       else executeInfoAction('INFO_PHONE');
     } else if (id === 'TV') {
-      // ✅ TV: 휘발성. 오늘 이미 봤다면 토스트 알림 후 차단
+      // ✅ TV: 휘발성. 오늘 이미 봤다면 차단
       if (isTvWatchedToday) {
         showToast("뉴스는 이미 종료되었습니다. (1일 1회 시청 가능)", "info");
       } else {
@@ -145,15 +155,6 @@ const GamePlay = ({ onAction, onGoMain }) => {
   };
 
   const FINAL_BG_X = 0, FINAL_BG_Y = -65, FINAL_BG_SCALE = 100; 
-  const FINAL_ASSET_CONFIG = {
-    WINDOW: { x: 480, y: 40, w: 230, h: 150, scale: 155 },
-    TV: { x: 240, y: 160, w: 140, h: 100, scale: 240 },
-    BED: { x: 743, y: 206, w: 206, h: 141, scale: 293 },
-    DESK: { x: -270, y: 340, w: 900, h: 225, scale: 143 },
-    NEWSPAPER: { x: 468, y: 361, w: 83, h: 45, scale: 191 },
-    PHONE: { x: 192, y: 353, w: 330, h: 374, scale: 26 },
-    LAPTOP: { x: 277, y: 278, w: 75, h: 62, scale: 272 },
-  };
 
   return (
     <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', backgroundColor: '#000', boxSizing: 'border-box', position: 'relative' }}>
@@ -179,7 +180,6 @@ const GamePlay = ({ onAction, onGoMain }) => {
         <RoomAssets config={FINAL_ASSET_CONFIG} period={timePeriod} hoveredObject={hoveredObject} onHover={setHoveredObject} onInteract={handleInteract} isStudiedToday={isStudiedToday} />
       </div>
 
-      {/* 💡 BottomPanel에 TV 시청 여부 추가 전달 */}
       <BottomPanel 
         data={{ money: currentMoney, day: currentDay, period }} 
         hoveredObject={hoveredObject} 
@@ -194,7 +194,10 @@ const GamePlay = ({ onAction, onGoMain }) => {
       <PhoneModal isOpen={isPhoneOpen} onClose={() => setIsPhoneOpen(false)} day={currentDay} content={phoneContent} />
       <TvModal isOpen={isTvOpen} onClose={() => setIsTvOpen(false)} day={currentDay} content={tvContent} />
       <StudyModal isOpen={isStudyOpen} onClose={() => setIsStudyOpen(false)} />
+      
+      {/* 💡 매핑된 데이터가 들어가는 주식 모달 */}
       <StockModal isOpen={isStockOpen} onClose={() => setIsStockOpen(false)} onConfirmTrade={(data) => { setPendingTradeData(data); setConfirmConfig({ isOpen: true, type: 'LAPTOP', cost: 1, title: '투자 진행', actionText: '확정' }); }} isTradedToday={isTradedToday} />
+      
       <SettlementModal isOpen={isSettlementOpen} onClose={() => setIsSettlementOpen(false)} day={currentDay} settlementData={settlementData} currentMoney={currentMoney} holdings={holdings} tradeLogs={tradeLogs} />
       <ArchiveModal isOpen={isArchiveOpen} onClose={() => setIsArchiveOpen(false)} currentDay={currentDay} archiveData={DUMMY_ARCHIVE_DATA} />
       <HelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
