@@ -28,6 +28,8 @@ const useGameStore = create((set, get) => ({
   // 알림 (Toast)
   toast: { message: '', visible: false, type: 'info' },
 
+  todayEventId: null,
+
   // --------------------------------------------------
   // 2. 액션 (Actions) - 일반 로직
   // --------------------------------------------------
@@ -60,17 +62,22 @@ const useGameStore = create((set, get) => ({
     studyCount: 0,
     hasRandomEvent: false,
     settlementAmount: 0,
+    todayEventId: null,
   }),
 
   // [액션 B] 하루 시작 데이터 업데이트 (DailyStartResponse 기반)
   setDailyStartData: (dailyData) => {
     if (!dailyData) return;
     
+    // 💡 [핵심] 9번 이벤트(죄책감)일 경우 에너지를 0으로, 아니면 2로 세팅
+    const eventId = dailyData.randomEventId || null;
+    const startEnergy = eventId === 9 ? 0 : 2;
+    
     set((state) => ({
       day: dailyData.portfolio?.currentDayNo || state.day,
       money: dailyData.portfolio?.cashBalance || state.money,
       period: 'MORNING',
-      energy: 2, // 하루 시작 시 에너지 리필
+      energy: startEnergy, // 💡 페널티 적용
       
       // 주식 목록 매핑 (백엔드 TradingStockResponse -> availableStocks)
       availableStocks: dailyData.tradingScreen?.stocks || [],
@@ -85,6 +92,7 @@ const useGameStore = create((set, get) => ({
       
       // 번뜩임 지급 처리
       sparkCount: dailyData.hasInspiration ? state.sparkCount + 1 : state.sparkCount,
+      todayEventId: eventId,
     }));
   },
 

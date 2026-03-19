@@ -2,10 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import './styles/App.css';
 
-// 💡 스토어 가져오기
 import useAuthStore from './store/useAuthStore';
-import useGameStore from './store/useGameStore'; // 신규 게임 스토어 임포트
-import { gameApi } from './api/gameApi'; // 💡 [추가] gameApi 임포트 필수!
+import useGameStore from './store/useGameStore'; 
+import { gameApi } from './api/gameApi'; 
 
 // 씬 컴포넌트들
 import LoadingScene from './scenes/LoadingScene';
@@ -15,19 +14,33 @@ import IntroStory from './scenes/IntroStory';
 import GamePlay from './scenes/GamePlay';
 import EndingScene from './scenes/EndingScene';
 import EventScene from './scenes/EventScene';
+import SchoolTransition from './components/SchoolTransition'; 
 
 function App() {
   const [scene, setScene] = useState('LOADING');
   const [testEndingType, setTestEndingType] = useState(null);
-  const [testEventType, setTestEventType] = useState(null);
+  const [currentEventType, setCurrentEventType] = useState(null);
   const [toastMessage, setToastMessage] = useState('');
 
-  // 💡 [핵심 수정] 무거운 gameData 상태가 삭제되었습니다!
-  // 대신 스토어에서 상태와 액션을 직접 꺼내옵니다.
-  const { period, day, nextPeriod, resetGame, runId, setDailyStartData } = useGameStore();
-
+  const { period, day, nextPeriod, resetGame, runId, setDailyStartData, todayEventId } = useGameStore();
   const { user, login, logout } = useAuthStore();
   const API_BASE_URL = 'http://localhost:8080';
+
+  const mapEventIdToType = (eventId) => {
+    const eventMap = {
+      1: 'LOTTERY',       
+      2: 'JOB',           
+      3: 'ILLEGAL',       
+      4: 'LOST_ITEM',     
+      5: 'BUTTON_100',    
+      6: 'ALLOWANCE',     
+      7: 'GOODS_SALE',    
+      8: 'POLICE_ARREST', 
+      // 💡 9번은 패시브 이벤트이므로, 학교가는 길의 씬은 '평범한 날'로 처리합니다.
+      9: 'NORMAL_DAY'         
+    };
+    return eventMap[eventId] || 'NORMAL_DAY'; 
+  };
 
   const showGlobalToast = (message) => {
     setToastMessage(message);
@@ -39,32 +52,22 @@ function App() {
   const checkSessionAndNavigate = async () => {
     try {
       const res = await fetch(`${API_BASE_URL}/api/users/me`, {
-        method: 'GET',
-        credentials: 'include', 
+        method: 'GET', credentials: 'include', 
       });
-
       if (res.ok) {
         const userData = await res.json();
         login(userData);
         setScene('MAIN');
-      } else {
-        setScene('AUTH');
-      }
+      } else setScene('AUTH');
     } catch (error) {
-      console.error('서버 통신 실패:', error);
       setScene('AUTH');
     }
   };
 
   const handleLogout = async () => {
-    try {
-      await fetch(`${API_BASE_URL}/api/auth/logout`, {
-        method: 'POST',
-        credentials: 'include',
-      });
-    } catch (e) {
-      console.error('로그아웃 에러:', e);
-    } finally {
+    try { await fetch(`${API_BASE_URL}/api/auth/logout`, { method: 'POST', credentials: 'include' }); } 
+    catch (e) {} 
+    finally {
       logout();
       showGlobalToast("안전하게 로그아웃 되었습니다!");
       setScene('AUTH'); 
@@ -72,9 +75,9 @@ function App() {
   };
 
   const handleResetGame = () => {
-    resetGame(); // 💡 스토어 초기화 액션 호출
+    resetGame(); 
     setTestEndingType(null);
-    setTestEventType(null);
+    setCurrentEventType(null); 
     setScene('MAIN');
   };
 
@@ -84,11 +87,30 @@ function App() {
   };
 
   const startEventTest = (type) => {
-    setTestEventType(null);
-    setTimeout(() => {
-      setTestEventType(type);
-      setScene('EVENT_SCENE');
-    }, 10);
+    setCurrentEventType(type);
+    setScene('SCHOOL_TRANSITION'); 
+  };
+
+  const handleTransitionComplete = () => {
+    if (currentEventType === 'NORMAL_DAY') {
+      if (runId) {
+         nextPeriod(); 
+         setScene('PLAY');
+      } else {
+         setScene('MAIN');
+      }
+    } else {
+      setScene('EVENT_SCENE'); 
+    }
+  };
+
+  const handleEventComplete = () => {
+    if (runId) {
+      nextPeriod(); 
+      setScene('PLAY');
+    } else {
+      setScene('MAIN');
+    }
   };
 
   return (
@@ -97,15 +119,8 @@ function App() {
       <AnimatePresence>
         {toastMessage && (
           <motion.div
-            initial={{ y: -50, x: '-50%', opacity: 0 }}
-            animate={{ y: 40, x: '-50%', opacity: 1 }}
-            exit={{ y: -50, x: '-50%', opacity: 0 }}
-            style={{
-              position: 'absolute', top: 0, left: '50%',
-              padding: '15px 30px', backgroundColor: '#e74c3c', border: '4px solid #c0392b',
-              color: '#fff', fontSize: '18px', fontWeight: 'bold', borderRadius: '8px',
-              boxShadow: '0 4px 10px rgba(0,0,0,0.5)', zIndex: 9999 
-            }}
+            initial={{ y: -50, x: '-50%', opacity: 0 }} animate={{ y: 40, x: '-50%', opacity: 1 }} exit={{ y: -50, x: '-50%', opacity: 0 }}
+            style={{ position: 'absolute', top: 0, left: '50%', padding: '15px 30px', backgroundColor: '#e74c3c', border: '4px solid #c0392b', color: '#fff', fontSize: '18px', fontWeight: 'bold', borderRadius: '8px', boxShadow: '0 4px 10px rgba(0,0,0,0.5)', zIndex: 9999 }}
           >
             {toastMessage}
           </motion.div>
@@ -127,14 +142,7 @@ function App() {
         
         {scene === 'MAIN' && (
           <motion.div key="main" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="scene-wrapper">
-            <MainMenu 
-              // 💡 [수정] 데이터 저장은 MainMenu 내부에서 스토어 액션으로 알아서 하므로, 여기서는 그냥 씬 전환만 합니다!
-              onStart={() => setScene('INTRO')} 
-              onTestEnding={() => setScene('ENDING_TEST')}
-              onTestEvent={() => setScene('EVENT_TEST')}
-              user={user} 
-              onLogout={handleLogout} 
-            />
+            <MainMenu onStart={() => setScene('INTRO')} onTestEnding={() => setScene('ENDING_TEST')} onTestEvent={() => setScene('EVENT_TEST')} user={user} onLogout={handleLogout} />
           </motion.div>
         )}
 
@@ -166,15 +174,22 @@ function App() {
                 <button className="retro-block" style={{ width: '300px', height: '50px', color: '#fff', backgroundColor: '#2c5364' }} onClick={() => startEventTest('ALLOWANCE')}>뜻밖의 용돈 (단발형)</button>
                 <button className="retro-block" style={{ width: '300px', height: '50px', color: '#fff', backgroundColor: '#2c5364' }} onClick={() => startEventTest('GOODS_SALE')}>스타 굿즈 판매 (단발형)</button>
                 <button className="retro-block" style={{ width: '300px', height: '50px', color: '#fff', backgroundColor: '#8b0000' }} onClick={() => startEventTest('POLICE_ARREST')}>경찰 체포 (단발형)</button>
+                <button className="retro-block" style={{ width: '300px', height: '50px', color: '#fff', backgroundColor: '#2ed573' }} onClick={() => startEventTest('NORMAL_DAY')}>평범한 등교 (단발형)</button>
               </div>
               <button className="pixel-btn" style={{ marginTop: '20px' }} onClick={() => setScene('MAIN')}>뒤로 가기</button>
             </div>
           </motion.div>
         )}
 
+        {scene === 'SCHOOL_TRANSITION' && (
+          <motion.div key="school_transition" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="scene-wrapper">
+            <SchoolTransition targetEvent={currentEventType} onComplete={handleTransitionComplete} />
+          </motion.div>
+        )}
+
         {scene === 'EVENT_SCENE' && (
           <motion.div key="event_scene" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="scene-wrapper">
-            <EventScene onComplete={() => setScene('MAIN')} eventType={testEventType} />
+            <EventScene onComplete={handleEventComplete} eventType={currentEventType} />
           </motion.div>
         )}
 
@@ -189,24 +204,26 @@ function App() {
             <GamePlay 
               onAction={async () => {
                 if (period === 'MORNING') {
-                  nextPeriod(); // 아침 -> 저녁
+                  const eventTypeStr = mapEventIdToType(todayEventId);
+                  setCurrentEventType(eventTypeStr);
+                  setScene('SCHOOL_TRANSITION');
                 } else {
-                  if (day >= 80) { // 백엔드 시나리오가 80일까지 생성됨을 확인
+                  if (day >= 80) { 
                     setScene('ENDING'); 
                   } else {
                     try {
-                      // 1. 백엔드에 '나 잔다!' 알림 (백엔드에서 Day+1 처리됨)
-                      const sleepRes = await gameApi.executeAction('SLEEP');
-                      
-                      // 2. 자고 일어났으니 다음 날의 '풀 데이터'를 새로 고침
+                      await gameApi.executeAction('SLEEP');
                       const nextDayData = await gameApi.getDailyStart(runId);
-                      
-                      // 3. 스토어 업데이트 (정산 결과, 뉴스 등이 싹 바뀜)
                       setDailyStartData(nextDayData);
                       
-                      showGlobalToast(`${nextDayData.portfolio.currentDayNo}일 차 아침이 밝았습니다!`);
+                      // 💡 [핵심] 잠에서 깼을 때 9번 이벤트면 특수 토스트, 아니면 정상 토스트
+                      if (nextDayData.randomEventId === 9) {
+                        showGlobalToast("양심의 가책을 느껴, 기운이 없습니다...");
+                      } else {
+                        showGlobalToast(`${nextDayData.portfolio.currentDayNo}일 차 아침이 밝았습니다!`);
+                      }
+                      
                     } catch (error) {
-                      console.error("수면 처리 실패:", error);
                       showGlobalToast("서버 통신 중 오류가 발생했습니다.");
                     }
                   }
