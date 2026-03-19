@@ -1,16 +1,15 @@
 import React, { useState, useRef } from 'react';
 
 const StockList = ({ stocks, selectedStock, onSelectStock }) => {
-  // 백엔드에서 industry(산업군) 필드를 주지 않으므로, 전체 보기만 유지합니다.
   const [filter, setFilter] = useState('전체');
   const scrollRef = useRef(null);
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
 
-  const filteredStocks = stocks; // 현재는 필터 없이 전체 표시
+  // 현재 백엔드 응답에 'industry' 필드가 없으므로 '전체'만 노출합니다.
+  const filteredStocks = stocks || [];
 
-  // 드래그 스크롤 핸들러 (추후 탭 확장 시 사용)
   const onDragStart = (e) => {
     setIsDragging(true);
     setStartX(e.pageX - scrollRef.current.offsetLeft);
@@ -25,10 +24,14 @@ const StockList = ({ stocks, selectedStock, onSelectStock }) => {
     scrollRef.current.scrollLeft = scrollLeft - walk;
   };
 
+  if (!stocks || stocks.length === 0) {
+    return <div style={{ color: '#fff', padding: '20px', textAlign: 'center' }}>주식 데이터를 불러오는 중이거나 데이터가 없습니다.</div>;
+  }
+
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', backgroundColor: '#1a1a2e', border: '3px solid #2f3640', borderRadius: '8px', overflow: 'hidden' }}>
       
-      {/* 탭 영역 (현재는 '전체' 하나만 고정) */}
+      {/* 탭 영역 */}
       <div 
         ref={scrollRef}
         className="hide-scrollbar" 
@@ -55,14 +58,14 @@ const StockList = ({ stocks, selectedStock, onSelectStock }) => {
       <div className="retro-scrollbar" style={{ flex: 1, overflowY: 'auto', padding: '8px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
         {filteredStocks.map(stock => {
           
-          // 💡 [핵심] TradingStockResponse 스펙과 100% 동일하게 매핑
-          const sId = stock.stockId;           // 종목 ID
-          const sName = stock.company;         // 회사명
-          const currentPrice = stock.currentPrice || 0; // 현재 가격
-          const quantity = stock.myQuantity || 0;       // 내 보유 수량 (백엔드가 계산해줌!)
+          // 💡 [핵심] 보내주신 JSON 응답 형태와 100% 일치하는 매핑!
+          const sId = stock.stockId;                   // "stockId": 1
+          const sName = stock.company;                 // "company": "삼성전자"
+          const currentPrice = stock.currentPrice;     // "currentPrice": 72000
+          const quantity = stock.myQuantity;           // "myQuantity": 10
           
-          // returnPct (예: 0.0125 -> 1.25%)
-          const changeRate = (stock.returnPct * 100) || 0;
+          // "returnPct": 0.0125 -> 화면에는 1.25% 로 표시
+          const changeRate = (stock.returnPct * 100) || 0; 
           const isUp = changeRate >= 0;
 
           return (

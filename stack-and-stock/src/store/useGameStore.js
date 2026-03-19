@@ -123,7 +123,7 @@ const useGameStore = create((set, get) => ({
     return holdings.reduce((acc, h) => {
       // availableStocks에서 현재가를 찾아 계산하거나, 백엔드가 준 evaluationAmount 사용
       const stock = availableStocks.find(s => s.stockId === h.stockId);
-      const currentPrice = stock ? stock.closePrice : h.avgCost;
+      const currentPrice = stock ? stock.currentPrice : h.avgCost;
       return acc + (currentPrice * h.quantity);
     }, 0);
   },

@@ -32,7 +32,8 @@ const GamePlay = ({ onAction, onGoMain }) => {
   const { 
     runId, day: currentDay, period, money: currentMoney, 
     sparkCount, studyCount, holdings, tradeLogs, 
-    daySummary: settlementData, showToast, updateAfterTrade 
+    daySummary: settlementData, showToast, updateAfterTrade, 
+    availableStocks
   } = useGameStore();
 
   const [hoveredObject, setHoveredObject] = useState(null);
@@ -61,12 +62,10 @@ const GamePlay = ({ onAction, onGoMain }) => {
   const publicPath = process.env.PUBLIC_URL;
   const bgImage = `${publicPath}/assets/bg/bg_${timePeriod}.png`;
 
-  // 💡 휘발성 액션 여부 계산
   const isTvWatchedToday = lastWatchedTvDay === currentDay;
   const isStudiedToday = lastStudiedDay === currentDay;
   const isTradedToday = lastTradedDay === currentDay;
 
-  // 다음 날이 되면 기사 캐시 초기화
   useEffect(() => {
     setPhoneContent("");
     setTvContent("");
@@ -90,7 +89,7 @@ const GamePlay = ({ onAction, onGoMain }) => {
         setIsPhoneOpen(true);
       } else if (actionType === 'INFO_TV') {
         setTvContent(res.message);
-        setLastWatchedTvDay(currentDay); // 시청 기록 저장
+        setLastWatchedTvDay(currentDay); 
         setIsTvOpen(true);
       } else if (actionType === 'INFO_PAPER') {
         setNewsContent(res.message);
@@ -111,11 +110,9 @@ const GamePlay = ({ onAction, onGoMain }) => {
     if (id === 'BED') onAction(); 
     else if (id === 'LAPTOP') setIsStockOpen(true); 
     else if (id === 'PHONE') {
-      // ✅ 휴대폰: 비휘발성. 데이터가 이미 있으면 서버 호출 없이 모달만 오픈
       if (phoneContent) setIsPhoneOpen(true);
       else executeInfoAction('INFO_PHONE');
     } else if (id === 'TV') {
-      // ✅ TV: 휘발성. 오늘 이미 봤다면 차단
       if (isTvWatchedToday) {
         showToast("뉴스는 이미 종료되었습니다. (1일 1회 시청 가능)", "info");
       } else {
@@ -145,11 +142,25 @@ const GamePlay = ({ onAction, onGoMain }) => {
       else if (type === 'TV') await executeInfoAction('INFO_TV');
       else if (type === 'DESK') await executeInfoAction('STUDY');
       else if (type === 'LAPTOP') {
-        setLastTradedDay(currentDay);
+        
+        // 💡 [핵심] 모달에서 넘겨준 거래 데이터로 백엔드 API 실행
+        if (pendingTradeData && pendingTradeData.orders && pendingTradeData.orders.length > 0) {
+           await gameApi.executeTrade(pendingTradeData);
+           
+           // 거래 성공 후 포트폴리오 API를 다시 호출하여 스토어 동기화
+           const newPortfolio = await gameApi.getCurrentPortfolio();
+           useGameStore.setState({ 
+             money: newPortfolio.cashBalance, 
+             holdings: newPortfolio.holdings 
+           });
+
+           setLastTradedDay(currentDay);
+           showToast("주식 거래가 성공적으로 체결되었습니다!", "success");
+        }
         setIsStockOpen(false);
       }
     } catch (error) {
-      const errorMsg = error.response?.data?.message || "작업을 완료할 수 없습니다.";
+      const errorMsg = error.response?.data?.message || "거래를 완료할 수 없습니다.";
       showToast(errorMsg, "error");
     }
   };
@@ -195,8 +206,16 @@ const GamePlay = ({ onAction, onGoMain }) => {
       <TvModal isOpen={isTvOpen} onClose={() => setIsTvOpen(false)} day={currentDay} content={tvContent} />
       <StudyModal isOpen={isStudyOpen} onClose={() => setIsStudyOpen(false)} />
       
-      {/* 💡 매핑된 데이터가 들어가는 주식 모달 */}
-      <StockModal isOpen={isStockOpen} onClose={() => setIsStockOpen(false)} onConfirmTrade={(data) => { setPendingTradeData(data); setConfirmConfig({ isOpen: true, type: 'LAPTOP', cost: 1, title: '투자 진행', actionText: '확정' }); }} isTradedToday={isTradedToday} />
+      {/* 💡 거래 내역(데이터)을 담아서 GamePlay로 올리는 StockModal */}
+      <StockModal 
+        isOpen={isStockOpen} 
+        onClose={() => setIsStockOpen(false)} 
+        onConfirmTrade={(data) => { 
+          setPendingTradeData(data); // 장바구니 내역 저장
+          setConfirmConfig({ isOpen: true, type: 'LAPTOP', cost: 1, title: '투자 진행', actionText: '확정' }); 
+        }} 
+        isTradedToday={isTradedToday} 
+      />
       
       <SettlementModal isOpen={isSettlementOpen} onClose={() => setIsSettlementOpen(false)} day={currentDay} settlementData={settlementData} currentMoney={currentMoney} holdings={holdings} tradeLogs={tradeLogs} />
       <ArchiveModal isOpen={isArchiveOpen} onClose={() => setIsArchiveOpen(false)} currentDay={currentDay} archiveData={DUMMY_ARCHIVE_DATA} />

@@ -35,17 +35,23 @@ const MainMenu = ({ onStart, onTestEnding, onTestEvent, user, onLogout }) => {
   }, [bgIndex, logoIndex]);
 
   const executeStartGame = async () => {
-    setIsLoading(true); 
+    setIsLoading(true); // 💡 로딩 시작!
     setShowWarningModal(false);
     try {
+      // 1. 방 만들기 (새 게임 생성 API 호출)
       const response = await gameApi.startGame();
       initNewGame(response);
-      onStart();
+
+      // 💡 [핵심 원인 해결!!] 2. 생성된 runId로 1일 차 '하루 시작 데이터'를 가져옵니다!
+      const dailyData = await gameApi.getDailyStart(response.runId);
+      setDailyStartData(dailyData); // 👉 여기서 드디어 주식 목록이 스토어에 꽂힙니다!
+
+      onStart(); // 인트로 및 게임 씬으로 이동
     } catch (error) {
       console.error("게임 시작 통신 에러:", error);
       alert("게임을 생성할 수 없습니다. 서버 상태를 확인해 주세요.");
     } finally {
-      setIsLoading(false); 
+      setIsLoading(false); // 💡 로딩 종료!
     }
   };
 

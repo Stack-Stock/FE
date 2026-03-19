@@ -1,14 +1,24 @@
 import React from 'react';
 
 const StockChart = ({ stock, day }) => {
+  // 주식이 선택되지 않았을 때의 안전장치
   if (!stock) return <div style={{ height: '200px', display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#888' }}>종목을 선택해주세요.</div>;
 
-  const history = stock.history.slice(0, day);
-  const currentPrice = history[history.length - 1];
-  const previousPrice = history.length > 1 ? history[history.length - 2] : currentPrice;
-  
-  const changeAmount = currentPrice - previousPrice;
-  const changeRate = ((changeAmount / previousPrice) * 100).toFixed(2);
+  // 💡 [핵심 해결] 백엔드 스펙에 맞게 필드명 수정 (history -> priceHistory)
+  // 객체 배열에서 closePrice(종가)만 뽑아서 단순 숫자 배열로 변환합니다.
+  const rawHistory = stock.priceHistory || [];
+  const history = rawHistory.map(item => item.closePrice);
+
+  // 만약 1일 차라서 과거 기록이 아예 없다면, 에러가 나지 않도록 현재가를 넣어줍니다.
+  if (history.length === 0) {
+    history.push(stock.currentPrice || 0);
+  }
+
+  // 💡 [핵심 해결] 백엔드에서 내려주는 데이터를 직접 사용하여 정확도 상승
+  const sName = stock.company || '알 수 없음';
+  const currentPrice = stock.currentPrice || 0;
+  const changeAmount = stock.priceChange || 0;
+  const changeRate = ((stock.returnPct || 0) * 100).toFixed(2);
   const isUp = changeAmount >= 0;
   const mainColor = isUp ? '#ff4b4b' : '#4b4bff'; 
 
@@ -27,7 +37,6 @@ const StockChart = ({ stock, day }) => {
   const svgHeight = 120; 
   const paddingY = 15;
   
-  // 💡 [핵심] 캔들 너비와 간격을 픽셀 단위로 고정합니다.
   const candleWidth = 10; // 캔들 몸통의 고정 두께
   const candleGap = 6;    // 캔들 사이의 간격
   const step = candleWidth + candleGap;
@@ -46,9 +55,9 @@ const StockChart = ({ stock, day }) => {
   return (
     <div style={{ backgroundColor: '#111', border: '3px solid #2f3640', borderRadius: '8px', padding: '15px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
       
-      {/* 종목 정보 */}
+      {/* 💡 [핵심] 종목 정보 렌더링 (stock.company 사용) */}
       <div>
-        <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#fff' }}>{stock.name} <span style={{ fontSize: '13px', color: '#888' }}>{stock.code}</span></div>
+        <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#fff' }}>{sName}</div>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px', marginTop: '2px' }}>
           <span style={{ fontSize: '26px', fontWeight: 'bold', color: '#fff' }}>₩{currentPrice.toLocaleString()}</span>
           <span style={{ fontSize: '15px', color: mainColor, fontWeight: 'bold' }}>
@@ -64,7 +73,7 @@ const StockChart = ({ stock, day }) => {
         
         <svg width="100%" height="100%" viewBox={`0 0 ${svgWidth} ${svgHeight}`} preserveAspectRatio="none" style={{ position: 'absolute', top: 0, left: 0 }}>
           
-          {/* 💡 [신규] 현재가 기준 가이드 점선 (빈 공간을 가로지름) */}
+          {/* 현재가 기준 가이드 점선 */}
           <line 
             x1="0" 
             y1={currentY} 
@@ -76,7 +85,7 @@ const StockChart = ({ stock, day }) => {
             opacity="0.6"
           />
 
-          {/* 💡 [신규] 점선 위에 표시되는 현재가 텍스트 */}
+          {/* 점선 위에 표시되는 현재가 텍스트 */}
           <text 
             x="10" 
             y={currentY - 6} 
@@ -84,7 +93,7 @@ const StockChart = ({ stock, day }) => {
             fontSize="11" 
             fontWeight="bold"
             fontFamily="monospace"
-            style={{ textShadow: '1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000' }} // 글씨가 잘 보이도록 검은 테두리
+            style={{ textShadow: '1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000' }} 
           >
             ₩{currentPrice.toLocaleString()}
           </text>
@@ -93,7 +102,7 @@ const StockChart = ({ stock, day }) => {
             const isCandleUp = c.close >= c.open;
             const color = isCandleUp ? '#ff4b4b' : '#4b4bff';
             
-            // 💡 [핵심] 마지막 캔들을 우측 끝으로 고정하고, 거꾸로 X 좌표를 계산하여 우측 정렬
+            // 마지막 캔들을 우측 끝으로 고정하고, 거꾸로 X 좌표를 계산하여 우측 정렬
             const distanceFromLast = candles.length - 1 - i;
             const x = svgWidth - paddingRight - (distanceFromLast * step);
             

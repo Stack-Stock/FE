@@ -15,6 +15,7 @@ import GamePlay from './scenes/GamePlay';
 import EndingScene from './scenes/EndingScene';
 import EventScene from './scenes/EventScene';
 import SchoolTransition from './components/SchoolTransition'; 
+import SleepTransition from './components/SleepTransition'; // 💡 [추가] 수면 트랜지션
 
 function App() {
   const [scene, setScene] = useState('LOADING');
@@ -36,7 +37,6 @@ function App() {
       6: 'ALLOWANCE',     
       7: 'GOODS_SALE',    
       8: 'POLICE_ARREST', 
-      // 💡 9번은 패시브 이벤트이므로, 학교가는 길의 씬은 '평범한 날'로 처리합니다.
       9: 'NORMAL_DAY'         
     };
     return eventMap[eventId] || 'NORMAL_DAY'; 
@@ -110,6 +110,16 @@ function App() {
       setScene('PLAY');
     } else {
       setScene('MAIN');
+    }
+  };
+
+  // 💡 [추가] 밤 -> 아침 수면 트랜지션이 끝났을 때 실행될 로직
+  const handleSleepComplete = () => {
+    setScene('PLAY'); // 아침 화면으로 복귀
+    if (todayEventId === 9) {
+      showGlobalToast("양심의 가책을 느껴, 기운이 없습니다...");
+    } else {
+      showGlobalToast(`${day}일 차 아침이 밝았습니다!`);
     }
   };
 
@@ -187,6 +197,13 @@ function App() {
           </motion.div>
         )}
 
+        {/* 💡 [추가] 수면 트랜지션 씬 렌더링 */}
+        {scene === 'SLEEP_TRANSITION' && (
+          <motion.div key="sleep_transition" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="scene-wrapper">
+            <SleepTransition day={day} onComplete={handleSleepComplete} />
+          </motion.div>
+        )}
+
         {scene === 'EVENT_SCENE' && (
           <motion.div key="event_scene" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="scene-wrapper">
             <EventScene onComplete={handleEventComplete} eventType={currentEventType} />
@@ -212,16 +229,12 @@ function App() {
                     setScene('ENDING'); 
                   } else {
                     try {
+                      // 💡 [수정] 통신이 완료되면 바로 아침 토스트를 띄우는 게 아니라 트랜지션 씬으로 넘어갑니다.
                       await gameApi.executeAction('SLEEP');
                       const nextDayData = await gameApi.getDailyStart(runId);
                       setDailyStartData(nextDayData);
                       
-                      // 💡 [핵심] 잠에서 깼을 때 9번 이벤트면 특수 토스트, 아니면 정상 토스트
-                      if (nextDayData.randomEventId === 9) {
-                        showGlobalToast("양심의 가책을 느껴, 기운이 없습니다...");
-                      } else {
-                        showGlobalToast(`${nextDayData.portfolio.currentDayNo}일 차 아침이 밝았습니다!`);
-                      }
+                      setScene('SLEEP_TRANSITION'); 
                       
                     } catch (error) {
                       showGlobalToast("서버 통신 중 오류가 발생했습니다.");

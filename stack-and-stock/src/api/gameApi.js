@@ -25,16 +25,21 @@ export const gameApi = {
     const response = await api.post('/api/actions', payload);
     return response.data;
   },
-  // 💡 [신규] 3일 뒤 경찰 출두 이벤트 예약
   triggerPoliceEvent: async (runId, currentDayNo) => {
     const payload = { runId, currentDayNo };
     const response = await api.post('/api/scenarios/police', payload);
     return response.data;
   },
-  // 💡 [신규] 1일, 2일 뒤 죄책감(기운 없음) 이벤트 예약
   triggerGuiltyEvent: async (runId, currentDayNo) => {
     const payload = { runId, currentDayNo };
     const response = await api.post('/api/scenarios/guilty', payload);
+    return response.data;
+  },
+  
+  // 💡 [신규] 다중 주식 거래 체결 (장바구니 방식)
+  executeTrade: async (tradeRequest) => {
+    // tradeRequest 형태: { orders: [ { stockId: 3, side: 'BUY', quantity: 10 }, ... ] }
+    const response = await api.post('/api/trades/execute', tradeRequest);
     return response.data;
   }
 };
