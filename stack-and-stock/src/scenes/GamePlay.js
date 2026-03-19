@@ -33,6 +33,8 @@ const GamePlay = ({ onAction, onGoMain }) => {
     holdings,
     tradeLogs,
     daySummary: settlementData,
+    showToast,         
+    updateAfterTrade,
     useEnergy // 💡 행동력 차감 액션 (필요시 연결)
   } = useGameStore();
 
@@ -135,17 +137,33 @@ const GamePlay = ({ onAction, onGoMain }) => {
   };
 
   // 💡 모달에서 "확인" 눌렀을 때 API 호출로 변경
-  const handleConfirmAction = () => {
+  const handleConfirmAction = async () => {
     const type = confirmConfig.type;
+    const currentConfig = { ...confirmConfig }; // 클로저 이슈 방지
     setConfirmConfig({ isOpen: false, type: '', cost: 0, title: '', actionText: '' }); 
 
-    if (type === 'NEWSPAPER') executeInfoAction('INFO_PAPER');
-    else if (type === 'TV') executeInfoAction('INFO_TV');
-    else if (type === 'DESK') executeInfoAction('STUDY');
-    else if (type === 'LAPTOP') {
-      setLastTradedDay(currentDay);
-      setIsStockOpen(false); 
-      setPendingTradeData(null); 
+    try {
+      if (type === 'NEWSPAPER') await executeInfoAction('INFO_PAPER');
+      else if (type === 'TV') await executeInfoAction('INFO_TV');
+      else if (type === 'DESK') await executeInfoAction('STUDY');
+      else if (type === 'LAPTOP') {
+        // 💡 [투자 확정] 백엔드 호출
+        // pendingTradeData에는 { stockId, quantity, side } 가 들어있어야 함
+        const res = await gameApi.executeAction(
+          pendingTradeData.side, // 'BUY' 또는 'SELL'
+          pendingTradeData.stockId,
+          pendingTradeData.quantity
+        );
+        
+        // 스토어 업데이트 (돈, 보유주식)
+        updateAfterTrade(res.cashBalance, res.holdings);
+        setLastTradedDay(currentDay);
+        setIsStockOpen(false);
+        showToast("거래가 성공적으로 체결되었습니다!", "success");
+      }
+    } catch (error) {
+      const errorMsg = error.response?.data?.message || "작업을 완료할 수 없습니다.";
+      showToast(errorMsg, "error"); // 💡 alert 대신 토스트 사용!
     }
   };
 

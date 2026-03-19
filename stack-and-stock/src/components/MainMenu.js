@@ -67,21 +67,25 @@ const MainMenu = ({ onStart, onTestEnding, onTestEvent, user, onLogout }) => {
   const handleContinueGame = async () => {
     setIsLoading(true);
     try {
-      const continueRes = await gameApi.continueRun(); 
-      const dailyData = await gameApi.getDailyStart(continueRes.runId); 
+      // 1. 현재 진행중인 runId를 먼저 확인
+      const continueInfo = await gameApi.continueRun();
       
-      initNewGame({ 
-        runId: continueRes.runId, 
-        dayNo: dailyData.portfolio.currentDayNo, 
-        cashBalance: dailyData.portfolio.cashBalance, 
-        apRemaining: continueRes.apRemaining 
-      }); 
-      setDailyStartData(dailyData); 
+      // 2. 해당 runId로 하루 시작 데이터를 한 번 더 호출해서 게임 판을 짭니다.
+      const dailyData = await gameApi.getDailyStart(continueInfo.runId);
       
-      onStart();
+      // 3. 스토어 주입
+      initNewGame({
+        runId: continueInfo.runId,
+        dayNo: dailyData.portfolio.currentDayNo,
+        cashBalance: dailyData.portfolio.cashBalance,
+        apRemaining: continueInfo.apRemaining
+      });
+      setDailyStartData(dailyData);
+      
+      onStart(); // 인트로 없이 바로 게임씬으로!
     } catch (error) {
-      console.error("이어하기 에러:", error);
-      alert("이어하기 데이터를 불러오지 못했습니다.");
+      console.error("이어하기 실패:", error);
+      alert("게임 데이터를 불러오는 중 오류가 발생했습니다.");
     } finally {
       setIsLoading(false);
     }

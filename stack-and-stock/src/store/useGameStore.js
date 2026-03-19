@@ -29,6 +29,20 @@ const useGameStore = create((set, get) => ({
   sparkCount: 0,
   studyCount: 0,
 
+  toast: { message: '', visible: false, type: 'info' }, // 💡 토스트 상태 추가
+
+  // 💡 토스트 표시 액션
+  showToast: (message, type = 'info') => {
+    set({ toast: { message, visible: true, type } });
+    setTimeout(() => set({ toast: { message: '', visible: false, type: 'info' } }), 3000);
+  },
+
+  // 💡 거래 성공 후 데이터 부분 업데이트 액션
+  updateAfterTrade: (cash, holdings) => set({
+    money: cash,
+    holdings: holdings
+  }),
+
   // --------------------------------------------------
   // 2. 파생 상태 (Getters) - 반복 계산 방지
   // --------------------------------------------------

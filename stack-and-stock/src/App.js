@@ -187,36 +187,27 @@ function App() {
         {scene === 'PLAY' && (
           <motion.div key="play" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="scene-wrapper">
             <GamePlay 
-              // 💡 [핵심 수정] 침대를 눌렀을 때의 동작
               onAction={async () => {
                 if (period === 'MORNING') {
-                  nextPeriod(); // 아침 -> 저녁으로 시간대 변경
+                  nextPeriod(); // 아침 -> 저녁
                 } else {
-                  if (day >= 10) { 
+                  if (day >= 80) { // 백엔드 시나리오가 80일까지 생성됨을 확인
                     setScene('ENDING'); 
                   } else {
-                    // 🌙 [나중에 추가할 곳] 수면 트랜지션 (화면 암전 등) 시작
-
                     try {
-                      // 1. 백엔드에 수면(하루 종료) 요청!
-                      const actionRes = await gameApi.executeAction('SLEEP');
-                      console.log("수면 처리 완료:", actionRes.message);
-
-                      // 2. 수면이 완료되었으므로, 다음 날(ex: 2일 차) 데이터 싹 긁어오기!
-                      const nextDayData = await gameApi.getDailyStart(runId);
-                      console.log("다음 날 데이터 수신:", nextDayData);
+                      // 1. 백엔드에 '나 잔다!' 알림 (백엔드에서 Day+1 처리됨)
+                      const sleepRes = await gameApi.executeAction('SLEEP');
                       
-                      // 3. 긁어온 데이터를 전역 스토어에 냅다 들이붓기 (알아서 화면이 2일 차로 바뀜!)
+                      // 2. 자고 일어났으니 다음 날의 '풀 데이터'를 새로 고침
+                      const nextDayData = await gameApi.getDailyStart(runId);
+                      
+                      // 3. 스토어 업데이트 (정산 결과, 뉴스 등이 싹 바뀜)
                       setDailyStartData(nextDayData);
                       
-                      // 안내 메시지
                       showGlobalToast(`${nextDayData.portfolio.currentDayNo}일 차 아침이 밝았습니다!`);
-
-                      // ☀️ [나중에 추가할 곳] 수면 트랜지션 해제 (화면 밝아짐)
-
                     } catch (error) {
-                      console.error("다음 날 넘어가기 실패:", error);
-                      showGlobalToast("수면 처리 중 서버 통신 에러가 발생했습니다.");
+                      console.error("수면 처리 실패:", error);
+                      showGlobalToast("서버 통신 중 오류가 발생했습니다.");
                     }
                   }
                 }
