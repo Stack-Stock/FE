@@ -1,8 +1,7 @@
 import React from 'react';
 import ActionButtons from './ActionButtons';
 
-// 💡 isStudiedToday 추가
-const BottomPanel = ({ data, hoveredObject, onHover, onInteract, isStudiedToday }) => {
+const BottomPanel = ({ data, hoveredObject, onHover, onInteract, isStudiedToday, isTvWatchedToday }) => {
   const day = data?.day || 10;
   const period = data?.period || 'MORNING';
 
@@ -10,10 +9,13 @@ const BottomPanel = ({ data, hoveredObject, onHover, onInteract, isStudiedToday 
     switch (hoveredObject) {
       case 'PHONE': return { title: "sns 찌라시로 정보를 확인해 보세요!", sub: "(소모 행동력 : 0)" };
       case 'NEWSPAPER': return { title: "언론사의 기사로 정보를 확인해 보세요!", sub: "(소모 행동력 : 2)" };
-      case 'TV': return { title: "최신 뉴스로 정보를 확인해 보세요!", sub: "(소모 행동력 : 1)" };
+      case 'TV': 
+        // 💡 TV 시청 여부에 따른 문구 변경
+        return isTvWatchedToday 
+          ? { title: "오늘의 뉴스는 이미 종료되었습니다.", sub: "내일의 새로운 소식을 기다려주세요!" }
+          : { title: "최신 뉴스로 정보를 확인해 보세요!", sub: "(소모 행동력 : 1)" };
       case 'LAPTOP': return { title: "뉴스와 기사에서 얻은 정보로 투자를 진행해 보세요!", sub: "(소모 행동력 : 1)" };
       case 'DESK': 
-        // 💡 이미 공부했다면 안내 문구도 바뀝니다.
         return isStudiedToday 
           ? { title: "오늘 할 공부는 이미 다 마쳤다!", sub: "조금 쉬어도 되지 않을까?" }
           : { title: "학생의 본분은 공부! 공부를 너무 안 하면 큰 일이 일어날지도...?", sub: "(소모 행동력 : 1)" };
@@ -33,8 +35,14 @@ const BottomPanel = ({ data, hoveredObject, onHover, onInteract, isStudiedToday 
         <p style={{ color: '#aaa', fontSize: '16px', marginTop: '8px' }}>{currentText.sub}</p>
       </div>
       <div style={{ flex: 1, backgroundColor: '#cdaa7d', border: '4px solid #4a3b2c', borderRadius: '8px', padding: '8px' }}>
-        {/* 💡 props로 같이 넘겨줍니다 */}
-        <ActionButtons period={period} hoveredObject={hoveredObject} onHover={onHover} onInteract={onInteract} isStudiedToday={isStudiedToday} />
+        <ActionButtons 
+          period={period} 
+          hoveredObject={hoveredObject} 
+          onHover={onHover} 
+          onInteract={onInteract} 
+          isStudiedToday={isStudiedToday} 
+          isTvWatchedToday={isTvWatchedToday} // 💡 추가
+        />
       </div>
     </div>
   );
