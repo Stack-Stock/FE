@@ -31,10 +31,15 @@ const FINAL_ASSET_CONFIG = {
 const GamePlay = ({ onAction, onGoMain }) => {
   const { 
     runId, day: currentDay, period, money: currentMoney, 
+    energy,
     sparkCount, studyCount, holdings, tradeLogs, 
     daySummary: settlementData, showToast, updateAfterTrade, 
     availableStocks
   } = useGameStore();
+
+  useEffect(() => {
+    console.log(`📊 [DAY ${currentDay}] 현재 스토어에 저장된 주식 데이터:`, availableStocks);
+  }, [availableStocks, currentDay]);
 
   const [hoveredObject, setHoveredObject] = useState(null);
   const [isStockOpen, setIsStockOpen] = useState(false);
@@ -135,7 +140,14 @@ const GamePlay = ({ onAction, onGoMain }) => {
 
   const handleConfirmAction = async () => {
     const type = confirmConfig.type;
+    const cost = confirmConfig.cost;
+
     setConfirmConfig({ isOpen: false, type: '', cost: 0, title: '', actionText: '' }); 
+
+    if (energy < cost) {
+      showToast("사용할 수 있는 행동력이 없습니다.", "error");
+      return; 
+    }
 
     try {
       if (type === 'NEWSPAPER') await executeInfoAction('INFO_PAPER');
@@ -183,9 +195,9 @@ const GamePlay = ({ onAction, onGoMain }) => {
         </div>
 
         <div style={{ position: 'absolute', top: '20px', right: '30px', display: 'flex', gap: '15px', zIndex: 1000 }}>
-          <button style={{ width: '45px', height: '45px', borderRadius: '50%', border: '3px solid #000', color: '#fff', fontWeight: 'bold', fontSize: '20px', display: 'flex', justifyContent: 'center', alignItems: 'center', backgroundColor: currentDay === 1 ? '#555' : '#4a90e2' }} onClick={() => { if (currentDay > 1) setIsSettlementOpen(true); }} disabled={currentDay === 1}>P</button>
-          <button style={{ width: '45px', height: '45px', borderRadius: '50%', border: '3px solid #000', color: '#fff', fontWeight: 'bold', fontSize: '20px', display: 'flex', justifyContent: 'center', alignItems: 'center', backgroundColor: currentDay === 1 ? '#555' : '#8e44ad' }} onClick={() => { if (currentDay > 1) setIsArchiveOpen(true); }} disabled={currentDay === 1}>A</button>
-          <button style={{ width: '45px', height: '45px', borderRadius: '50%', border: '3px solid #000', color: '#fff', fontWeight: 'bold', fontSize: '20px', display: 'flex', justifyContent: 'center', alignItems: 'center', backgroundColor: '#e74c3c' }} onClick={() => setIsHelpOpen(true)}>?</button>
+          <button style={{ width: '45px', height: '45px', borderRadius: '50%', border: '3px solid #000', color: '#fff', fontWeight: 'bold', fontSize: '20px', display: 'flex', justifyContent: 'center', alignItems: 'center', backgroundColor: currentDay === 1 ? '#555' : '#4a90e2', cursor: currentDay === 1 ? 'not-allowed' : 'pointer' }} onClick={() => { if (currentDay > 1) setIsSettlementOpen(true); }} disabled={currentDay === 1}>P</button>
+          <button style={{ width: '45px', height: '45px', borderRadius: '50%', border: '3px solid #000', color: '#fff', fontWeight: 'bold', fontSize: '20px', display: 'flex', justifyContent: 'center', alignItems: 'center', backgroundColor: currentDay === 1 ? '#555' : '#8e44ad', cursor: currentDay === 1 ? 'not-allowed' : 'pointer' }} onClick={() => { if (currentDay > 1) setIsArchiveOpen(true); }} disabled={currentDay === 1}>A</button>
+          <button style={{ width: '45px', height: '45px', borderRadius: '50%', border: '3px solid #000', color: '#fff', fontWeight: 'bold', fontSize: '20px', display: 'flex', justifyContent: 'center', alignItems: 'center', backgroundColor: '#e74c3c', cursor: currentDay === 1 ? 'not-allowed' : 'pointer' }} onClick={() => setIsHelpOpen(true)}>?</button>
         </div>
 
         <RoomAssets config={FINAL_ASSET_CONFIG} period={timePeriod} hoveredObject={hoveredObject} onHover={setHoveredObject} onInteract={handleInteract} isStudiedToday={isStudiedToday} />
