@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import LoadingScreen from '../components/LoadingScreen'; // 💡 로딩 화면 컴포넌트 임포트
 import { motion, AnimatePresence } from 'framer-motion';
 import { gameApi } from '../api/gameApi';
 import useGameStore from '../store/useGameStore'; 
@@ -20,6 +21,8 @@ const MainMenu = ({ onStart, onTestEnding, onTestEvent, user, onLogout }) => {
   const [showWarningModal, setShowWarningModal] = useState(false);
 
   const publicPath = process.env.PUBLIC_URL;
+  // 💡 준비하신 배경 이미지를 로딩 화면용으로 사용합니다.
+  const loadingBgImage = `${publicPath}/assets/auth/auth_bg.png`;
   
   // 스토어 액션 가져오기
   const { initNewGame, setDailyStartData } = useGameStore();
@@ -40,7 +43,7 @@ const MainMenu = ({ onStart, onTestEnding, onTestEvent, user, onLogout }) => {
 
   // 1️⃣ 새 게임 시작 (실제 통신부)
   const executeStartGame = async () => {
-    setIsLoading(true);
+    setIsLoading(true); // 💡 로딩 시작!
     setShowWarningModal(false);
     try {
       const response = await gameApi.startGame();
@@ -50,7 +53,7 @@ const MainMenu = ({ onStart, onTestEnding, onTestEvent, user, onLogout }) => {
       console.error("게임 시작 통신 에러:", error);
       alert("게임을 생성할 수 없습니다. 서버 상태를 확인해 주세요.");
     } finally {
-      setIsLoading(false);
+      setIsLoading(false); // 💡 로딩 종료!
     }
   };
 
@@ -65,7 +68,7 @@ const MainMenu = ({ onStart, onTestEnding, onTestEvent, user, onLogout }) => {
 
   // 3️⃣ "이어하기" 버튼 클릭 로직
   const handleContinueGame = async () => {
-    setIsLoading(true);
+    setIsLoading(true); // 💡 로딩 시작!
     try {
       // 1. 현재 진행중인 runId를 먼저 확인
       const continueInfo = await gameApi.continueRun();
@@ -87,13 +90,20 @@ const MainMenu = ({ onStart, onTestEnding, onTestEvent, user, onLogout }) => {
       console.error("이어하기 실패:", error);
       alert("게임 데이터를 불러오는 중 오류가 발생했습니다.");
     } finally {
-      setIsLoading(false);
+      setIsLoading(false); // 💡 로딩 종료!
     }
   };
 
   return (
     <div className="main-menu-container">
       
+      {/* 💡 전면 로딩 화면 (isLoading이 true일 때만 나타남) */}
+      <AnimatePresence>
+        {isLoading && (
+          <LoadingScreen bgImage={loadingBgImage} text="NOW LOADING..." />
+        )}
+      </AnimatePresence>
+
       {/* 🚨 레트로 컨셉 경고 팝업 모달 */}
       <AnimatePresence>
         {showWarningModal && (
@@ -165,6 +175,7 @@ const MainMenu = ({ onStart, onTestEnding, onTestEvent, user, onLogout }) => {
       <div className="main-ui-layer">
         <div className="main-button-group">
           
+          {/* 💡 로딩 중일 때는 [ 통신 중... ] 문구를 띄우고 버튼 클릭을 막습니다 */}
           <button className="retro-block menu-btn-custom" onClick={handleNewGameClick} disabled={isLoading}>
             {isLoading ? '[ 통신 중... ]' : '[ 새 게임 시작하기 ]'}
           </button>
