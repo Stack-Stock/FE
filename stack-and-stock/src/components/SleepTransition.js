@@ -16,9 +16,9 @@ const SleepTransition = ({ day, onComplete }) => {
 
   useEffect(() => {
     // 💡 [수정] 모든 타이머를 기존 대비 60%로 단축 (1200->720, 2400->1440, 3600->2160)
-    const timer1 = setTimeout(() => setPhase('SLEEPING'), 720);
-    const timer2 = setTimeout(() => setPhase('MORNING_START'), 1440);
-    const timer3 = setTimeout(onComplete, 2160); 
+    const timer1 = setTimeout(() => setPhase('SLEEPING'), 36);
+    const timer2 = setTimeout(() => setPhase('MORNING_START'), 720);
+    const timer3 = setTimeout(onComplete, 1080); 
 
     return () => {
       clearTimeout(timer1);

@@ -21,13 +21,13 @@ const SchoolTransition = ({ targetEvent, onComplete }) => {
       if (targetEvent === 'NORMAL_DAY') {
         setPhase('NORMAL_DAY');
         // 평범한 날 안내 문구 띄우고 1.8초 뒤 오후 세션으로 바로 종료 (기존 3초)
-        setTimeout(onComplete, 1800); 
+        setTimeout(onComplete, 900); 
       } else {
         setPhase('EVENT_NOTICE'); // 이벤트 발생 연출
         // 깜빡임 효과 보여주고 1.1초 뒤 EventScene으로 이동 (기존 1.8초)
-        setTimeout(onComplete, 1100); 
+        setTimeout(onComplete, 550); 
       }
-    }, 1500); // 캠퍼스 풍경 감상 시간 (기존 2.5초)
+    }, 750); // 캠퍼스 풍경 감상 시간 (기존 2.5초)
 
     return () => clearTimeout(timer);
   }, [targetEvent, onComplete]);
