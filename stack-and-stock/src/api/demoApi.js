@@ -1078,7 +1078,20 @@ export const demoApi = {
 
   executeAction: async (payload) => {
     const action = payload.actionType;
+    
+    // 💡 잠자기(SLEEP) 액션 처리 로직
     if (action === "SLEEP") {
+      // 💡 [핵심 추가] 데모 모드는 3일 차 밤에 잠을 자면 2번(일반 성공) 엔딩으로 직행!
+      if (demoState.currentDayNo >= 3) {
+        return {
+          endingType: 2, // 2번: 성공 - 성실한 투자자 엔딩
+          cashBalance: demoState.cashBalance,
+          apRemaining: 0,
+          message: "데모 플레이가 성공적으로 종료되었습니다.",
+        };
+      }
+
+      // 1일 차, 2일 차일 경우에는 정상적으로 다음 날로 넘어갑니다.
       demoState.currentDayNo += 1;
       demoState.apRemaining = 2;
       demoState.actionsDone = [];

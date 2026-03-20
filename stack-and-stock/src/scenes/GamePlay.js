@@ -162,13 +162,19 @@ const GamePlay = ({ onAction, onGoMain }) => {
            
            // 거래 성공 후 포트폴리오 API를 다시 호출하여 스토어 동기화
            const newPortfolio = await gameApi.getCurrentPortfolio();
-           useGameStore.setState({ 
+           
+           // 💡 [핵심 수정] 투자 성공 시 행동력(energy)도 차감하도록 추가!
+           useGameStore.setState((state) => ({ 
              money: newPortfolio.cashBalance, 
-             holdings: newPortfolio.holdings 
-           });
+             holdings: newPortfolio.holdings,
+             energy: state.energy - cost 
+           }));
 
            setLastTradedDay(currentDay);
            showToast("주식 거래가 성공적으로 체결되었습니다!", "success");
+        } else {
+           // 주문 내역이 없으면 행동력을 깎지 않음
+           showToast("선택된 거래 내역이 없습니다.", "info");
         }
         setIsStockOpen(false);
       }

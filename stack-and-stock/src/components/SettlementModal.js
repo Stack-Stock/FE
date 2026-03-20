@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import useGameStore from '../store/useGameStore'; // 💡 스토어 임포트
-import { STOCK_LIST } from '../data/dummyStockData';
+import useGameStore from '../store/useGameStore'; 
 
-// 💡 대부분의 데이터를 스토어에서 직접 꺼내옵니다.
 const SettlementModal = ({ isOpen, onClose }) => {
   // 💡 스토어 구독
   const { day, money: currentMoney, holdings, tradeLogs, daySummary: settlementData } = useGameStore();
@@ -19,27 +17,38 @@ const SettlementModal = ({ isOpen, onClose }) => {
   const { assetChange = 0, cashChange = 0, stockValueChange = 0 } = settlementData || {};
 
   const formatChange = (amount) => {
-    if (amount > 0) return { text: `+₩${amount.toLocaleString()}`, color: '#2ecc71' };
+    if (amount > 0) return { text: `+₩${amount.toLocaleString()}`, color: '#2ecc71' }; // 상승 빨간색(한국 기준)으로 하고 싶다면 '#ff4b4b' 추천
     if (amount < 0) return { text: `-₩${Math.abs(amount).toLocaleString()}`, color: '#4b4bff' };
     return { text: `+₩0`, color: '#a4b0be' };
   };
 
-  // 2️⃣ 탭 2: 보유 주식 및 총 자산 계산 (배열)
+  // 2️⃣ 탭 2: 보유 주식 및 총 자산 계산 (백엔드 실제 데이터 사용)
   let currentStockValue = 0;
+  
   const holdingsList = (Array.isArray(holdings) ? holdings : []).map((info) => {
-    const stock = STOCK_LIST.find(s => s.id === info.stockId);
-    if (!stock) return null;
+    // 💡 [수정] STOCK_INFO 참조를 삭제하고 백엔드가 주는 companyName만 사용합니다!
+    const companyName = info.companyName || `종목 ${info.stockId}`;
+    const quantity = info.quantity || 0;
+    const avgCost = info.avgCost || 0;
+    const currentPrice = info.currentPrice || 0;
+    const evaluationAmount = info.evaluationAmount || 0;
     
-    const currentPrice = stock.history[day - 1] || 0;
-    const totalValue = currentPrice * info.quantity;
-    currentStockValue += totalValue;
+    currentStockValue += evaluationAmount;
     
-    const avgPrice = info.avgCost || info.avgPrice || 1; 
-    const returnRate = (((currentPrice - avgPrice) / avgPrice) * 100).toFixed(2);
-    const isProfitable = currentPrice >= avgPrice;
+    // 수익률 직접 계산 (백엔드에서 안 주면 프론트에서 계산)
+    const returnRate = avgCost > 0 ? (((currentPrice - avgCost) / avgCost) * 100).toFixed(2) : 0;
+    const isProfitable = currentPrice >= avgCost;
 
-    return { ...stock, ...info, currentPrice, totalValue, returnRate, isProfitable };
-  }).filter(Boolean);
+    return { 
+      companyName, 
+      quantity, 
+      avgCost, 
+      currentPrice, 
+      evaluationAmount, 
+      returnRate, 
+      isProfitable 
+    };
+  });
 
   const totalAssets = currentMoney + currentStockValue;
 
@@ -114,11 +123,13 @@ const SettlementModal = ({ isOpen, onClose }) => {
                     {holdingsList.map((item, idx) => (
                       <div key={idx} style={{ backgroundColor: '#1a1a2e', border: '2px solid #2f3640', borderRadius: '8px', padding: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <div>
-                          <div style={{ color: '#fff', fontSize: '16px', fontWeight: 'bold', marginBottom: '5px' }}>{item.name} <span style={{ color: '#2e86de', fontSize: '13px', marginLeft: '5px' }}>{item.quantity}주</span></div>
-                          <div style={{ color: '#aaa', fontSize: '13px' }}>평단가: ₩{(item.avgCost || item.avgPrice).toLocaleString()}</div>
+                          <div style={{ color: '#fff', fontSize: '16px', fontWeight: 'bold', marginBottom: '5px' }}>
+                            {item.companyName} <span style={{ color: '#2e86de', fontSize: '13px', marginLeft: '5px' }}>{item.quantity}주</span>
+                          </div>
+                          <div style={{ color: '#aaa', fontSize: '13px' }}>평단가: ₩{item.avgCost.toLocaleString()}</div>
                         </div>
                         <div style={{ textAlign: 'right' }}>
-                          <div style={{ color: '#fff', fontSize: '16px', fontWeight: 'bold', marginBottom: '5px' }}>₩{item.totalValue.toLocaleString()}</div>
+                          <div style={{ color: '#fff', fontSize: '16px', fontWeight: 'bold', marginBottom: '5px' }}>₩{item.evaluationAmount.toLocaleString()}</div>
                           <div style={{ color: item.isProfitable ? '#ff4b4b' : '#4b4bff', fontSize: '14px', fontWeight: 'bold' }}>
                             {item.isProfitable ? '▲' : '▼'} {Math.abs(item.returnRate)}%
                           </div>
