@@ -1,5 +1,4 @@
 // src/api/demoApi.js
-// 💡 백엔드를 대체하는 3일짜리 데모 시나리오 엔진
 
 let demoState = {
   runId: 9999,
@@ -7,26 +6,26 @@ let demoState = {
   cashBalance: 1000000,
   apRemaining: 2,
   holdings: [],
-  actionsDone: [], // 💡 오늘 수행한 행동들을 저장 (매일 리셋됨)
+  actionsDone: [],
   eventResolved: false,
 };
 
 const demoArticles = [
   {
     dayNo: 1,
-    stockId: 1, // 현소차 관련
+    stockId: 1,
     title: "현소차·키야 美판매 3천만대 눈앞",
     story:
-      "현대차와 기아가 미국 시장에서 39년간 누적 판매 2930만대를 기록하며 올해 3000만대 달성을 앞두고 있다는 소식이다. 장기간의 꾸준한 판매 성과와 미국 시장 내 입지 강화를 보여주는 긍정적 지표로, 브랜드 가치와 시장 점유율 측면에서 의미 있는 이정표로 평가될 수 있다.",
+      "현대차와 기아가 미국 시장에서 39년간 누적 판매 2930만대를 기록하며 올해 3000만대 달성을 앞두고 있다는 소식이다. 브랜드 가치와 시장 점유율 측면에서 의미 있는 이정표로 평가될 수 있다.",
     url: "https://www.mk.co.kr/article/11272318",
-    publishedAt: "2025-03-24T17:51:09", // ISO 형식 권장
+    publishedAt: "2025-03-24T17:51:09",
   },
   {
     dayNo: 2,
     stockId: 1,
     title: "日 관세협상 타결에 … 현소차 주가 훨훨",
     story:
-      "미국과 일본의 관세 협상 타결 소식이 현대차에 긍정적으로 작용했다. 일본이 관세율을 크게 낮추면서 합의했다는 것은, 한국 자동차 업체들도 향후 비슷한 수준의 관세율 적용 가능성이 높아졌다는 의미로 해석되었다. 특히 현대차는 북미 시장에서 일본 업체들과 직접 경쟁하는 구도이기 때문에 기대감이 투자 심리 개선으로 이어졌다.",
+      "미국과 일본의 관세 협상 타결 소식이 현대차에 긍정적으로 작용했다. 한국 자동차 업체들도 향후 비슷한 수준의 관세율 적용 가능성이 높아졌다는 의미로 해석되어 투자 심리가 개선되었다.",
     url: "https://www.mk.co.kr/article/11375860",
     publishedAt: "2025-07-23T18:02:34",
   },
@@ -35,7 +34,7 @@ const demoArticles = [
     stockId: 1,
     title: "“깐부즈 막내 출격”…31만원 뚫은 현소차, 2가지 무기 더 있다는데",
     story:
-      "현소차는 미국 행정부의 로봇 산업 육성 정책 발표로 보유 중인 브루클린다이나믹스의 가치가 재조명받았고, 자율주행 개발 방향 전환과 빅테크 협업 가능성이 추가 호재로 작용했습니다. 로봇과 자율주행이라는 두 가지 미래 성장 동력이 동시에 부각되었습니다.",
+      "현소차는 미국 행정부의 로봇 산업 육성 정책 발표로 보스턴다이나믹스의 가치가 재조명받았고, 자율주행 기술 협업 가능성이 호재로 작용하며 투자 심리가 개선되었습니다.",
     url: "https://www.mk.co.kr/article/11485559",
     publishedAt: "2025-12-05T21:13:52",
   },
@@ -980,30 +979,36 @@ const demoPrices = {
   ],
 };
 
-// 1. 이벤트 데이터 정의 (이미지 내용 반영)
 const eventsPool = {
   1: {
     eventId: 1,
     title: "🍀 행운의 복권",
-    description:
-      "오늘은 운이 좋을 것 같은 예감이 듭니다. 복권을 한 장 사보시겠습니까? (당첨 확률 5%)",
+    description: "복권을 사보시겠습니까? (5% 확률 당첨)",
     choices: [
-      { id: 1, text: "복권을 산다 (-5,000원)", cost: 5000 },
-      { id: 2, text: "사지 않는다", cost: 0 },
+      { id: 1, text: "산다 (-5,000원)", cost: 5000 },
+      { id: 2, text: "안 산다", cost: 0 },
+    ],
+  },
+  10: {
+    eventId: 10,
+    title: "🎁 프론트 전용 특별 이벤트",
+    description: "프론트엔드에만 존재하는 10번 이벤트입니다.",
+    choices: [
+      { id: 1, text: "선택 A", cost: 0 },
+      { id: 2, text: "선택 B", cost: 0 },
     ],
   },
 };
 
 export const demoApi = {
   startGame: async () => {
-    // 상태 초기화
     demoState = {
       runId: 9999,
       currentDayNo: 1,
       cashBalance: 1000000,
       apRemaining: 2,
       holdings: [],
-      actionsDone: [], // 초기화
+      actionsDone: [],
       eventResolved: false,
     };
     return {
@@ -1025,64 +1030,54 @@ export const demoApi = {
         holdings: demoState.holdings,
       },
       tradingScreen: { stocks: demoPrices[day] || demoPrices[3] },
-      daySummary: day > 1 ? { message: "어제는 힘든 하루였습니다..." } : null,
+      daySummary:
+        day > 1 ? { message: "어제는 정말 긴박한 하루였습니다!" } : null,
       articleArchive: { articles: visibleArticles },
       hasRandomEvent: isEventDay,
-      randomEventId: isEventDay ? 1 : null,
+      randomEventId: isEventDay ? 10 : null, // 💡 2일차 10번 이벤트 강제 발생
       hasInspiration: false,
     };
   },
 
-  // 💡 스토어에서 넘어온 ID에 맞는 이벤트 데이터 반환
   getRandomEvent: async (runId) => {
-    const eventId = 1; // 데모에서는 1번 고정
-    return eventsPool[eventId];
+    const day = demoState.currentDayNo;
+    return eventsPool[day === 2 ? 10 : 1];
   },
 
-  // 💡 선택 결과 처리
   resolveRandomEvent: async (payload) => {
     const { choiceId } = payload;
-    const event = eventsPool[1];
-    const choice = event.choices.find((c) => c.id === choiceId);
-
-    demoState.eventResolved = true; // 이벤트 종료 기록
-
+    demoState.eventResolved = true;
+    if (demoState.currentDayNo === 2)
+      return {
+        success: true,
+        message: "10번 이벤트가 종료되었습니다.",
+        cashBalance: demoState.cashBalance,
+      };
     if (choiceId === 1) {
-      // '복권을 산다' 선택
-      demoState.cashBalance -= choice.cost;
-
-      // 5% 당첨 확률 로직
-      const isWinner = true;
-      const prize = 100000; // 당첨금 10만원
-
-      if (isWinner) {
-        demoState.cashBalance += prize;
+      demoState.cashBalance -= 5000;
+      if (Math.random() < 0.05) {
+        demoState.cashBalance += 100000;
         return {
           success: true,
-          message: `🎊 축하합니다! 복권에 당첨되어 ${prize.toLocaleString()}원을 획득했습니다!`,
-          cashBalance: demoState.cashBalance,
-        };
-      } else {
-        return {
-          success: true,
-          message: "꽝! 아쉽게도 낙첨되었습니다. 역시 주식이 답인가 봅니다.",
+          message: "🎊 복권 당첨! 10만원 획득!",
           cashBalance: demoState.cashBalance,
         };
       }
+      return {
+        success: true,
+        message: "꽝! 다음 기회에...",
+        cashBalance: demoState.cashBalance,
+      };
     }
-
     return {
       success: true,
-      message: "복권을 사지 않고 평소처럼 하루를 시작합니다.",
+      message: "이벤트를 무사히 마쳤습니다.",
       cashBalance: demoState.cashBalance,
     };
   },
 
   executeAction: async (payload) => {
     const action = payload.actionType;
-    const day = demoState.currentDayNo; // 현재 날짜 가져오기
-
-    // 1. 잠자기 처리 (기존과 동일)
     if (action === "SLEEP") {
       demoState.currentDayNo += 1;
       demoState.apRemaining = 2;
@@ -1090,92 +1085,42 @@ export const demoApi = {
       demoState.eventResolved = false;
       return {
         cashBalance: demoState.cashBalance,
-        apRemaining: demoState.apRemaining,
+        apRemaining: 2,
         message: "다음 날이 되었습니다.",
       };
     }
-
-    // 2. 이미 오늘 수행한 적이 있는지 확인
     const isAlreadyDone = demoState.actionsDone.includes(action);
-
-    // 3. 처음 하는 행동일 때만 행동력 검사 및 소모
     if (!isAlreadyDone) {
-      const costs = {
-        INFO_PAPER: 2,
-        INFO_PHONE: 0,
-        INFO_TV: 1,
-      };
-
-      const cost = costs[action] !== undefined ? costs[action] : 1;
-
-      // 행동력 부족 체크 로직 추가
-      if (demoState.apRemaining < cost) {
+      const costs = { INFO_PAPER: 2, INFO_PHONE: 0, INFO_TV: 1 };
+      const cost = costs[action] ?? 1;
+      if (demoState.apRemaining < cost)
         return {
           cashBalance: demoState.cashBalance,
           apRemaining: demoState.apRemaining,
-          message: "행동력이 부족하여 새로운 정보를 확인할 수 없습니다!",
-          isError: true, // 프론트에서 경고창을 띄우기 용이하게 추가
+          message: "행동력이 부족합니다!",
+          isError: true,
         };
-      }
-
-      // 행동력 차감 및 수행 목록에 기록
       demoState.apRemaining -= cost;
-      demoState.actionsDone.push(action); // 💡 이 줄이 있어야 다음에 클릭할 때 공짜가 됩니다.
+      demoState.actionsDone.push(action);
     }
-
-    // 💡 날짜별/기기별 맞춤형 메시지 데이터
-    const newsData = {
-      1: {
-        INFO_PAPER:
-          "현소차와 키야가 올해 미국 시장에서 누적 판매 3000만대 기록을 달성할 것으로 보인다. 현소차그룹은 1986년 미국 진출 이후 올해 2월까지 두 브랜드 합산 2930만3995대를 판매했다고 밝혔다. 이는 미국 진출 39년 만의 성과로, 연내 3000만대 돌파가 확실시된다. 현소차그룹은 미국 시장에서 꾸준한 판매 증가세를 보이며 주요 완성차 업체로 자리매김했다. 누적 판매 기록은 브랜드 인지도와 시장 입지를 보여주는 상징적 지표로 평가된다.",
-        INFO_TV:
-          "국내 자동차 업체가 해외 주요 시장에서 장기간 누적 판매 기록을 경신할 전망입니다. 1980년대 중반 진출 이후 지속적인 판매 성과를 보이고 있으며, 올해 상징적인 수치를 달성할 것으로 예상됩니다. 다만 최근 글로벌 경쟁 심화와 환율 변동성도 함께 고려해야 할 요소로 지적됩니다.",
-        INFO_PHONE:
-          "자동차 쪽 미국에서 엄청 팔렸다던데 ㄷㄷ 누적으로 몇천만대라는데 진짜임? 모빌리티 업종 얘기 많이 들리네",
-      },
-      2: {
-        INFO_PAPER:
-          "미국과 일본의 관세 협상이 타결되면서 현소차와 키야에 대한 투자심리가 개선되고 있다. 일본이 관세율을 크게 낮추면서 합의에 이르렀다는 소식이 전해지자, 한국 자동차 업체들도 비슷한 수준의 관세율을 적용받을 가능성이 높아졌다는 분석이 나온다. 업계에서는 그동안 미국의 관세 정책을 둘러싼 불확실성이 글로벌 자동차 업체들의 수출 전략과 북미 시장 실적 전망에 부담으로 작용해왔다고 지적한다. 현소차는 미국 시장에서 일본 업체들과 경쟁 구도에 있는 만큼, 이번 협상 타결이 향후 한미 간 관세 협상에도 긍정적 선례가 될 수 있다는 기대감이 형성되고 있다. 시장 참가자들은 관세 불확실성 해소가 현소차의 글로벌 영업이익 전망 개선으로 이어질 수 있다고 보고 있다.",
-        INFO_TV:
-          "미국과 일본의 관세 협상이 타결되었습니다. 일본이 관세율을 크게 낮추면서 글로벌 자동차 산업에 긍정적 신호로 받아들여지고 있는데요, 전문가들은 다른 국가들도 비슷한 수준의 협상 가능성이 있다는 관측을 내놓고 있습니다. 다만 구체적인 협상 내용과 실제 적용 시점에 대해서는 아직 불확실성이 남아있습니다.",
-        INFO_PHONE:
-          "미일 관세 협상 타결됐대ㄷㄷ 자동차 쪽 분위기 괜찮아진다는 소문? ㅋㅋ",
-      },
-      3: {
-        INFO_PAPER:
-          "현소차가 로봇과 자율주행이라는 두 가지 모멘텀에 주목받고 있습니다. 미국 행정부가 로봇 산업 육성 의지를 밝힌 가운데, 현소차가 보유한 브루클린다이나믹스의 가치가 재평가되고 있습니다. 동시에 현소차는 최근 자율주행 개발 방향성을 전환했으며, 빅테크 기업들과의 협업 가능성도 호재로 작용하고 있습니다. 시가총액 6위인 현소차는 로봇과 자율주행이라는 양날개를 통해 새로운 성장 동력을 확보했다는 평가를 받고 있습니다. 완성차 본업 외에도 미래 모빌리티 분야에서 다각화된 포트폴리오를 구축한 점이 긍정적으로 부각되는 상황입니다.",
-        INFO_TV:
-          "미국 행정부가 로봇 산업 육성 의지를 공식 밝혔습니다. 국내 완성차 업체 중 로봇 사업과 자율주행 기술을 동시에 보유한 곳들이 관심을 받고 있는데요. 특히 최근 자율주행 개발 방향을 조정한 기업들의 향후 행보가 주목됩니다.",
-        INFO_PHONE:
-          "미국에서 로봇 산업 밀어준다는데 ㄷㄷ 자율주행 쪽도 뭔가 움직임 있다던데? 모빌리티 테마 요즘 핫하네 ㅋㅋ",
-      },
-    };
-
-    // 해당 날짜와 액션에 맞는 메시지 추출 (없으면 기본 메시지)
+    const day = demoState.currentDayNo;
     const dayMessages = newsData[day] || newsData[1];
-    let msg = isAlreadyDone ? "" : "";
-    msg += dayMessages[action];
-
     return {
       cashBalance: demoState.cashBalance,
       apRemaining: demoState.apRemaining,
-      message: msg,
+      message: dayMessages[action],
     };
   },
 
   executeTrade: async (tradeRequest) => {
-    if (demoState.apRemaining < 1) {
+    if (demoState.apRemaining < 1)
       return { success: false, message: "행동력이 부족합니다!" };
-    }
     demoState.apRemaining -= 1;
-
     const day = demoState.currentDayNo;
     const todayPrices = demoPrices[day] || demoPrices[3];
-
     tradeRequest.orders.forEach((order) => {
       const stock = todayPrices.find((s) => s.stockId === order.stockId);
       if (!stock) return;
-
       if (order.side === "BUY") {
         const cost = stock.currentPrice * order.quantity;
         demoState.cashBalance -= cost;
@@ -1207,11 +1152,9 @@ export const demoApi = {
               (h) => h.stockId !== stock.stockId,
             );
         }
-        // 데모 모드는 편의상 즉시 정산 (혹은 T+3 무시)
         demoState.cashBalance += stock.currentPrice * order.quantity;
       }
     });
-
     return {
       success: true,
       cashBalance: demoState.cashBalance,
@@ -1222,5 +1165,32 @@ export const demoApi = {
 
   getCurrentPortfolio: async () => {
     return { cashBalance: demoState.cashBalance, holdings: demoState.holdings };
+  },
+};
+
+const newsData = {
+  1: {
+    INFO_PAPER:
+      "현소차와 키야가 올해 미국 시장에서 누적 판매 3000만대 기록을 달성할 것으로 보인다. 현소차그룹은 미국 진출 39년 만의 성과를 보이며 주요 업체로 자리매김했다.",
+    INFO_TV:
+      "국내 자동차 업체가 해외 주요 시장에서 지속적인 판매 성과를 보이고 있으며, 올해 상징적인 수치를 달성할 것으로 예상됩니다.",
+    INFO_PHONE:
+      "자동차 쪽 미국에서 엄청 팔렸다던데 ㄷㄷ 누적으로 몇천만대라는데 진짜임? 모빌리티 업종 봐봐",
+  },
+  2: {
+    INFO_PAPER:
+      "미국과 일본의 관세 협상이 타결되면서 현소차와 키야에 대한 투자심리가 개선되고 있다. 향후 한미 간 관세 협상에도 긍정적 선례가 될 것이라는 기대감이 형성 중이다.",
+    INFO_TV:
+      "미국과 일본의 관세 협상이 타결되었습니다. 일본이 관세율을 크게 낮추면서 글로벌 자동차 산업에 긍정적 신호로 받아들여지고 있습니다.",
+    INFO_PHONE:
+      "미일 관세 협상 타결됐대ㄷㄷ 자동차 쪽 분위기 괜찮아진다는 소문? ㅋㅋ",
+  },
+  3: {
+    INFO_PAPER:
+      "현소차가 로봇과 자율주행이라는 두 가지 모멘텀에 주목받고 있습니다. 브루클린다이나믹스의 가치가 재평가되고 있으며 빅테크 협업 가능성도 호재입니다.",
+    INFO_TV:
+      "미국 행정부가 로봇 산업 육성 의지를 공식 밝혔습니다. 국내 완성차 업체 중 로봇 사업과 자율주행 기술을 보유한 곳들이 관심을 받고 있습니다.",
+    INFO_PHONE:
+      "미국에서 로봇 산업 밀어준다는데 ㄷㄷ 자율주행 쪽도 뭔가 움직임 있다던데? 모빌리티 테마 핫하네 ㅋㅋ",
   },
 };
