@@ -192,7 +192,7 @@ const MainMenu = ({ onStart, onTestEnding, onTestEvent, user, onLogout }) => {
             className="retro-block menu-btn-custom" onClick={handleDemoPlay} disabled={isLoading}
             style={{ backgroundColor: '#27ae60', border: '3px solid #1e8449', marginTop: '10px' }}
           >
-            [ 데모 플레이 (5Days) ]
+            [ 데모 플레이 (3days) ]
           </button>
           
           <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
@@ -201,7 +201,7 @@ const MainMenu = ({ onStart, onTestEnding, onTestEvent, user, onLogout }) => {
           </div>
         </div>
         <p className="copyright" style={{ position: 'absolute', bottom: '20px', left: '50%', transform: 'translateX(-50%)' }}>
-          © 2026 Team SSAFY 14th. All rights reserved.
+          © 2026 Team 매일 FULL STORY. All rights reserved.
         </p>
       </div>
     </div>

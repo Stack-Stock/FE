@@ -165,16 +165,39 @@ const EndingScene = ({ onRestart, forcedType }) => {
               transition={{ duration: 15, ease: "linear" }}
               style={{ textAlign: 'center', paddingTop: '100px' }}
             >
-              <h1 style={{ fontSize: '64px', marginBottom: '100px', color: currentEnding.color }}>{currentEnding.title}</h1>
-              <h2 style={{ marginBottom: '50px' }}>STAFF</h2>
-              <p style={{ fontSize: '24px', marginBottom: '30px' }}>Director: 조재웅</p>
-              <p style={{ fontSize: '24px', marginBottom: '30px' }}>Team: 나우유씨미;런타임에러</p>
-              <p style={{ fontSize: '24px', marginBottom: '30px' }}>Design: SSAFY 14th</p>
-              <p style={{ fontSize: '24px', marginBottom: '300px' }}>Powered by React & Spring Boot</p>
-              <h2 style={{ marginBottom: '50px' }}>SPECIAL THANKS</h2>
-              <p style={{ fontSize: '24px', marginBottom: '30px' }}>SSAFY Instructors</p>
-              <p style={{ fontSize: '24px', marginBottom: '400px' }}>And You, The Investor</p>
-              <h1 style={{ fontSize: '48px' }}>THANK YOU FOR PLAYING</h1>
+              <h1 style={{ fontSize: '64px', marginBottom: '100px', color: currentEnding.color }}>
+                {currentEnding.title}
+              </h1>
+
+              <h2 style={{ marginBottom: '30px' }}>STACK&STOCK</h2>
+              <p style={{ fontSize: '24px', marginBottom: '50px' }}>
+                A News-Based Investment Simulation Experience
+              </p>
+
+              <h2 style={{ marginBottom: '30px' }}>TEAM</h2>
+              <p style={{ fontSize: '24px', marginBottom: '50px' }}>
+                매일 FULL STORY
+              </p>
+
+              <h2 style={{ marginBottom: '30px' }}>PROJECT INFO</h2>
+              <p style={{ fontSize: '24px', marginBottom: '50px' }}>
+                'News to Action' AI Hackathon
+              </p>
+              <p style={{ fontSize: '24px', marginBottom: '50px' }}>
+                Hosted by 매경미디어 · 앤트로픽 · 미래에셋증권 · AIDA ROOT
+              </p>
+
+              <h2 style={{ marginBottom: '30px' }}>SPECIAL THANKS</h2>
+              <p style={{ fontSize: '24px', marginBottom: '50px' }}>
+                SSAFY & Instructors
+              </p>
+              <p style={{ fontSize: '24px', marginBottom: '400px' }}>
+                And You, The Investor
+              </p>
+
+              <h1 style={{ fontSize: '48px' }}>
+                THANK YOU FOR PLAYING STACK&STOCK
+              </h1>
             </motion.div>
             
             <button 
