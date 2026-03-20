@@ -4,7 +4,7 @@ const useGameStore = create((set, get) => ({
   // --------------------------------------------------
   // 1. 상태 (State)
   // --------------------------------------------------
-  isDemoMode: false, // 💡 [추가] 데모 모드 여부
+  isDemoMode: false,
 
   runId: null,
   day: 1,
@@ -22,13 +22,17 @@ const useGameStore = create((set, get) => ({
   studyCount: 0,       
   toast: { message: '', visible: false, type: 'info' },
   todayEventId: null,
+  
+  // 💡 [추가] 백엔드에서 받아올 엔딩 번호 (1~6)
+  endingType: null,
 
   // --------------------------------------------------
   // 2. 액션 (Actions) - 일반 로직
   // --------------------------------------------------
-  
-  // 💡 [추가] 데모 모드 세팅
   setDemoMode: (isDemo) => set({ isDemoMode: isDemo }),
+  
+  // 💡 [추가] 엔딩 번호 세팅 함수
+  setEndingType: (type) => set({ endingType: type }),
 
   showToast: (message, type = 'info') => {
     set({ toast: { message, visible: true, type } });
@@ -56,6 +60,7 @@ const useGameStore = create((set, get) => ({
     hasRandomEvent: false,
     settlementAmount: 0,
     todayEventId: null,
+    endingType: null, // 💡 새 게임 시 엔딩 초기화
   }),
 
   setDailyStartData: (dailyData) => {
@@ -89,12 +94,13 @@ const useGameStore = create((set, get) => ({
   })),
 
   resetGame: () => set({ 
-    isDemoMode: false, // 💡 리셋 시 데모 모드도 초기화
+    isDemoMode: false,
     runId: null, 
     day: 1, 
     holdings: [], 
     availableStocks: [], 
-    articles: [] 
+    articles: [],
+    endingType: null // 💡 리셋 시 엔딩 초기화
   }),
 
   // --------------------------------------------------
