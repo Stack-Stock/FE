@@ -1,14 +1,23 @@
 import React, { useState, useRef } from 'react';
+import { STOCK_INFO, SECTOR_MAP } from '../../data/stockData'; // 💡 새로 만든 주식 백과사전 불러오기
 
-const StockList = ({ stocks, selectedStock, onSelectStock }) => {
+// 💡 [수정] props에 localHoldings 추가 수신 (장바구니 수량 실시간 표시용)
+const StockList = ({ stocks, selectedStock, onSelectStock, localHoldings }) => {
   const [filter, setFilter] = useState('전체');
   const scrollRef = useRef(null);
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
 
-  // 현재 백엔드 응답에 'industry' 필드가 없으므로 '전체'만 노출합니다.
-  const filteredStocks = stocks || [];
+  // 💡 1. 탭(버튼) 동적 생성을 위해 현재 주식 목록에 존재하는 고유 '섹터 ID'들만 뽑아냅니다.
+  const availableSectorIds = [...new Set((stocks || []).map(s => STOCK_INFO[s.stockId]?.sectorId).filter(Boolean))].sort((a,b)=>a-b);
+
+  // 💡 2. 필터링 로직: 선택된 탭이 '전체'가 아니면, 해당 섹터의 주식만 남깁니다.
+  const filteredStocks = (stocks || []).filter(stock => {
+    if (filter === '전체') return true;
+    const sectorId = STOCK_INFO[stock.stockId]?.sectorId;
+    return SECTOR_MAP[sectorId] === filter; // 선택한 필터(예: 'MOBILITY (모빌리티)')와 일치하는지 확인
+  });
 
   const onDragStart = (e) => {
     setIsDragging(true);
@@ -43,28 +52,58 @@ const StockList = ({ stocks, selectedStock, onSelectStock }) => {
         }}
       >
         <button 
+          onClick={() => setFilter('전체')}
           style={{
             padding: '6px 12px', fontWeight: 'bold', fontSize: '13px',
-            backgroundColor: '#e94560', color: '#fff',
-            border: '2px solid #fff', borderRadius: '4px',
-            cursor: 'pointer', pointerEvents: isDragging ? 'none' : 'auto'
+            backgroundColor: filter === '전체' ? '#e94560' : '#333', color: '#fff',
+            border: filter === '전체' ? '2px solid #fff' : '2px solid #555', borderRadius: '4px',
+            cursor: 'pointer', pointerEvents: isDragging ? 'none' : 'auto',
+            transition: 'all 0.2s'
           }}
         >
           전체
         </button>
+        
+        {/* 💡 3. 백과사전을 바탕으로 섹터별 탭 버튼을 그려줍니다. */}
+        {availableSectorIds.map(sectorId => {
+          const fullSectorName = SECTOR_MAP[sectorId]; // 예: "MOBILITY (모빌리티)"
+          // 탭 버튼에는 공간 차지를 줄이기 위해 괄호 안의 한글 이름만 추출하여 표시 (예: "모빌리티")
+          const shortName = fullSectorName.includes('(') ? fullSectorName.split('(')[1].replace(')', '') : fullSectorName;
+          
+          return (
+            <button 
+              key={sectorId}
+              onClick={() => setFilter(fullSectorName)}
+              style={{
+                padding: '6px 12px', fontWeight: 'bold', fontSize: '13px',
+                backgroundColor: filter === fullSectorName ? '#e94560' : '#333', color: '#fff',
+                border: filter === fullSectorName ? '2px solid #fff' : '2px solid #555', borderRadius: '4px',
+                cursor: 'pointer', pointerEvents: isDragging ? 'none' : 'auto',
+                transition: 'all 0.2s'
+              }}
+            >
+              {shortName}
+            </button>
+          );
+        })}
       </div>
 
       {/* 주식 리스트 본문 */}
       <div className="retro-scrollbar" style={{ flex: 1, overflowY: 'auto', padding: '8px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
         {filteredStocks.map(stock => {
+          const sId = stock.stockId; 
           
-          // 💡 [핵심] 보내주신 JSON 응답 형태와 100% 일치하는 매핑!
-          const sId = stock.stockId;                   // "stockId": 1
-          const sName = stock.company;                 // "company": "삼성전자"
-          const currentPrice = stock.currentPrice;     // "currentPrice": 72000
-          const quantity = stock.myQuantity;           // "myQuantity": 10
+          // 💡 [핵심] 백엔드에서 '종목 4' 같이 오거나 이름이 아예 없으면 프론트의 백과사전으로 강제 변환!
+          let sName = stock.company;
+          if (!sName || sName.includes('종목')) {
+            sName = STOCK_INFO[sId]?.name || `종목 ${sId}`;
+          }
+
+          const currentPrice = stock.currentPrice; 
           
-          // "returnPct": 0.0125 -> 화면에는 1.25% 로 표시
+          // 💡 [수정] 모달에서 계산된 장바구니 수량(localHoldings)을 최우선으로 보여줍니다!
+          const quantity = localHoldings ? (localHoldings.find(h => h.stockId === sId)?.qty || 0) : (stock.myQuantity || 0);
+          
           const changeRate = (stock.returnPct * 100) || 0; 
           const isUp = changeRate >= 0;
 
