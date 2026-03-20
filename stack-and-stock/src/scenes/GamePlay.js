@@ -125,6 +125,7 @@ const GamePlay = ({ onAction, onGoMain }) => {
       }
     } else if (id === 'NEWSPAPER') {
       if (lastReadNewsDay === currentDay) {
+        setIsNewsOpen(true);
         showToast("신문은 이미 다 읽었습니다.", "info");
       } else {
         setConfirmConfig({ isOpen: true, type: 'NEWSPAPER', cost: 2, title: '신문', actionText: '확인' }); 
