@@ -15,7 +15,8 @@ import GamePlay from './scenes/GamePlay';
 import EndingScene from './scenes/EndingScene';
 import EventScene from './scenes/EventScene';
 import SchoolTransition from './components/SchoolTransition'; 
-import SleepTransition from './components/SleepTransition'; // 💡 [추가] 수면 트랜지션
+import SleepTransition from './components/SleepTransition';
+import EndingTransition from './components/EndingTransition'; // 💡 [추가] 엔딩 트랜지션 가져오기
 
 function App() {
   const [scene, setScene] = useState('LOADING');
@@ -23,7 +24,7 @@ function App() {
   const [currentEventType, setCurrentEventType] = useState(null);
   const [toastMessage, setToastMessage] = useState('');
 
-  const { period, day, nextPeriod, resetGame, runId, setDailyStartData, todayEventId } = useGameStore();
+  const { period, day, nextPeriod, resetGame, runId, setDailyStartData, todayEventId, setEndingType } = useGameStore();
   const { user, login, logout } = useAuthStore();
   const API_BASE_URL = 'http://localhost:8080';
 
@@ -75,10 +76,25 @@ function App() {
     }
   };
 
-  const handleResetGame = () => {
+  // 💡 [핵심 수정] 엔딩 후 메인으로 돌아갈 때 유저 정보(canContinue)를 최신화합니다.
+  const handleResetGame = async () => {
     resetGame(); 
     setTestEndingType(null);
     setCurrentEventType(null); 
+    
+    // 메인으로 가기 전, 이어하기 상태를 갱신하기 위해 유저 정보 API 재호출
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/users/me`, {
+        method: 'GET', credentials: 'include', 
+      });
+      if (res.ok) {
+        const userData = await res.json();
+        login(userData); // 💡 스토어에 갱신된 정보(canContinue: false 등) 덮어쓰기
+      }
+    } catch (error) {
+      console.error("유저 정보 갱신 실패", error);
+    }
+
     setScene('MAIN');
   };
 
@@ -114,9 +130,8 @@ function App() {
     }
   };
 
-  // 💡 [추가] 밤 -> 아침 수면 트랜지션이 끝났을 때 실행될 로직
   const handleSleepComplete = () => {
-    setScene('PLAY'); // 아침 화면으로 복귀
+    setScene('PLAY'); 
     if (todayEventId === 9) {
       showGlobalToast("양심의 가책을 느껴, 기운이 없습니다...");
     } else {
@@ -198,7 +213,6 @@ function App() {
           </motion.div>
         )}
 
-        {/* 💡 [추가] 수면 트랜지션 씬 렌더링 */}
         {scene === 'SLEEP_TRANSITION' && (
           <motion.div key="sleep_transition" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="scene-wrapper">
             <SleepTransition day={day} onComplete={handleSleepComplete} />
@@ -226,20 +240,19 @@ function App() {
                   setCurrentEventType(eventTypeStr);
                   setScene('SCHOOL_TRANSITION');
                 } else {
-                  if (day >= 80) { 
-                    setScene('ENDING'); 
-                  } else {
-                    try {
-                      // 💡 [수정] 통신이 완료되면 바로 아침 토스트를 띄우는 게 아니라 트랜지션 씬으로 넘어갑니다.
-                      await gameApi.executeAction('SLEEP');
+                  try {
+                    const sleepResult = await gameApi.executeAction('SLEEP');
+                    
+                    if (sleepResult.endingType) {
+                      setEndingType(sleepResult.endingType);
+                      setScene('ENDING_TRANSITION'); 
+                    } else {
                       const nextDayData = await gameApi.getDailyStart(runId);
                       setDailyStartData(nextDayData);
-                      
                       setScene('SLEEP_TRANSITION'); 
-                      
-                    } catch (error) {
-                      showGlobalToast("서버 통신 중 오류가 발생했습니다.");
                     }
+                  } catch (error) {
+                    showGlobalToast("서버 통신 중 오류가 발생했습니다.");
                   }
                 }
               }} 
@@ -248,11 +261,18 @@ function App() {
           </motion.div>
         )}
 
+        {scene === 'ENDING_TRANSITION' && (
+          <motion.div key="ending_transition" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="scene-wrapper">
+            <EndingTransition onComplete={() => setScene('ENDING')} />
+          </motion.div>
+        )}
+
         {scene === 'ENDING' && (
           <motion.div key="ending" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="scene-wrapper">
             <EndingScene onRestart={handleResetGame} forcedType={testEndingType} />
           </motion.div>
         )}
+
       </AnimatePresence>
     </div>
   );

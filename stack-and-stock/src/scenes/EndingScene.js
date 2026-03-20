@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo, memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import useGameStore from '../store/useGameStore'; // 💡 [추가] 스토어 가져오기
 import '../styles/EndingEffect.css';
 
-// [해결] 입자 레이어를 독립 컴포넌트로 분리하고 memo로 감싸 리렌더링 간섭을 차단합니다.
 const ParticleLayer = memo(({ effectType }) => {
   const count = 30;
   const particles = [];
@@ -19,7 +19,7 @@ const ParticleLayer = memo(({ effectType }) => {
     let className = "particle";
     if (effectType === "gold") className += " gold-particle";
     if (effectType === "glitch") className += " red-glitch";
-    if (effectType === "snow") className += " snow-particle"; // 필요 시 추가
+    if (effectType === "snow") className += " snow-particle"; 
     
     particles.push(<div key={i} className={className} style={style} />);
   }
@@ -31,6 +31,9 @@ const EndingScene = ({ onRestart, forcedType }) => {
   const [step, setStep] = useState('RESULT');
   const [displayText, setDisplayText] = useState('');
   const publicPath = process.env.PUBLIC_URL;
+
+  // 💡 [추가] 스토어에서 백엔드가 넘겨준 엔딩 타입(숫자 1~6) 가져오기
+  const { endingType } = useGameStore();
 
   const endingData = useMemo(() => ({
     GREAT_SUCCESS: {
@@ -83,9 +86,23 @@ const EndingScene = ({ onRestart, forcedType }) => {
     }
   }), []);
 
-  const currentEnding = endingData[forcedType] || endingData.SUCCESS;
+  // 💡 [핵심 로직] 숫자로 들어온 endingType을 문자열 키로 매핑
+  const mapTypeToString = (typeNum) => {
+    const map = {
+      1: 'GREAT_SUCCESS',
+      2: 'SUCCESS',
+      3: 'FAIL',
+      4: 'BANKRUPT',
+      5: 'HIDDEN_STUDY',
+      6: 'HIDDEN_LUCK'
+    };
+    return map[typeNum] || 'SUCCESS'; // 기본값 설정
+  };
 
-  // 타이핑 로직: currentEnding이 바뀔 때만 타이머가 시작됩니다.
+  // 테스트 모드(forcedType)가 있으면 그걸 우선 사용하고, 없으면 실제 통신 결과(endingType)를 사용
+  const finalTypeStr = forcedType || mapTypeToString(endingType);
+  const currentEnding = endingData[finalTypeStr] || endingData.SUCCESS;
+
   useEffect(() => {
     let i = 0;
     setDisplayText('');
@@ -103,16 +120,13 @@ const EndingScene = ({ onRestart, forcedType }) => {
   return (
     <div style={{ width: '100%', height: '100%', backgroundColor: '#000', color: '#fff', position: 'relative', overflow: 'hidden' }}>
       
-      {/* 배경 효과 레이어: step이 RESULT일 때만 표시하며 독립 컴포넌트로 렌더링 */}
       {step === 'RESULT' && <ParticleLayer effectType={currentEnding.effect} />}
 
       <AnimatePresence mode="wait">
         {step === 'RESULT' && (
           <motion.div 
             key="result"
-            initial={{ opacity: 0 }} 
-            animate={{ opacity: 1 }} 
-            exit={{ opacity: 0 }}
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: '60px', zIndex: 10 }}
           >
             <motion.h2 
@@ -160,9 +174,7 @@ const EndingScene = ({ onRestart, forcedType }) => {
             style={{ width: '100%', height: '100%', display: 'flex', justifyContent: 'center', backgroundColor: '#000' }}
           >
             <motion.div 
-              initial={{ y: 720 }} 
-              animate={{ y: -1200 }} 
-              transition={{ duration: 15, ease: "linear" }}
+              initial={{ y: 720 }} animate={{ y: -1200 }} transition={{ duration: 15, ease: "linear" }}
               style={{ textAlign: 'center', paddingTop: '100px' }}
             >
               <h1 style={{ fontSize: '64px', marginBottom: '100px', color: currentEnding.color }}>
