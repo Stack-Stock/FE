@@ -53,7 +53,18 @@ const EventScene = ({ eventType, onComplete }) => {
     LOST_ITEM: { type: 'CHOICE', title: '분실된 지갑', choiceImg: 'event_lostitem_choice.png', choiceText: '길바닥에 두툼한 지갑이 떨어져 있다.', options: [{ label: '경찰서에 신고한다', next: 'POLICE', text: '사례금을 조금 받았다. 마음이 편하다.' }, { label: '조용히 챙긴다', next: 'KEEP', text: '돈은 벌었지만 계속 뒤가 구리다.' }], resultImgs: { POLICE: 'event_lostitem_police.png', KEEP: 'event_lostitem_keep.png' } },
     ALLOWANCE: { type: 'SINGLE', title: '뜻밖의 용돈', image: 'event_allowance.png', text: '부모님께서 기특하다며 국밥 값 하라고 용돈을 주셨다.' },
     GOODS_SALE: { type: 'SINGLE', title: '스타 굿즈 판매', image: 'event_goods_sale.png', text: '한정판 굿즈가 드디어 팔렸다! 택배 상자에서 빛이 나는 것 같다.' },
-    POLICE_ARREST: { type: 'SINGLE', title: '경찰 체포', image: 'event_police_arrest.png', text: '착하게 살걸... 착하게 살자...' }
+    POLICE_ARREST: { type: 'SINGLE', title: '경찰 체포', image: 'event_police_arrest.png', text: '착하게 살걸... 착하게 살자...' },
+    DEMO_LOTTERY: { 
+      type: 'GACHA', 
+      title: '복권 판매점 (데모)', 
+      choiceImg: 'event_lottery_choice.png', 
+      choiceText: '길가에 복권 가판대가 보인다. 왠지 오늘 무조건 당첨될 것 같은 기분이다!', 
+      options: [{ label: '자신 있게 복권을 긁어본다', next: 'ROLL_DICE' }], 
+      probability: 1.0, // 👈 핵심! 100% 당첨!
+      winResult: { next: 'WIN', text: '축하합니다! 5만원에 당첨되었습니다.' }, 
+      loseResult: { next: 'LOSE', text: '이 메시지는 영원히 볼 수 없습니다.' }, 
+      resultImgs: { WIN: 'event_lottery_win.png', LOSE: 'event_lottery_lose.png' } 
+    },
   };
 
   const currentEvent = eventDB[eventType] || eventDB.ALLOWANCE;

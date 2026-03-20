@@ -37,7 +37,8 @@ function App() {
       6: 'ALLOWANCE',     
       7: 'GOODS_SALE',    
       8: 'POLICE_ARREST', 
-      9: 'NORMAL_DAY'         
+      9: 'NORMAL_DAY',
+      10: 'DEMO_LOTTERY'         
     };
     return eventMap[eventId] || 'NORMAL_DAY'; 
   };
