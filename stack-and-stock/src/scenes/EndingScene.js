@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import useGameStore from '../store/useGameStore'; // 💡 [추가] 스토어 가져오기
+import useGameStore from '../store/useGameStore';
 import '../styles/EndingEffect.css';
 
 const ParticleLayer = memo(({ effectType }) => {
@@ -32,7 +32,6 @@ const EndingScene = ({ onRestart, forcedType }) => {
   const [displayText, setDisplayText] = useState('');
   const publicPath = process.env.PUBLIC_URL;
 
-  // 💡 [추가] 스토어에서 백엔드가 넘겨준 엔딩 타입(숫자 1~6) 가져오기
   const { endingType } = useGameStore();
 
   const endingData = useMemo(() => ({
@@ -86,7 +85,6 @@ const EndingScene = ({ onRestart, forcedType }) => {
     }
   }), []);
 
-  // 💡 [핵심 로직] 숫자로 들어온 endingType을 문자열 키로 매핑
   const mapTypeToString = (typeNum) => {
     const map = {
       1: 'GREAT_SUCCESS',
@@ -96,10 +94,9 @@ const EndingScene = ({ onRestart, forcedType }) => {
       5: 'HIDDEN_STUDY',
       6: 'HIDDEN_LUCK'
     };
-    return map[typeNum] || 'SUCCESS'; // 기본값 설정
+    return map[typeNum] || 'SUCCESS'; 
   };
 
-  // 테스트 모드(forcedType)가 있으면 그걸 우선 사용하고, 없으면 실제 통신 결과(endingType)를 사용
   const finalTypeStr = forcedType || mapTypeToString(endingType);
   const currentEnding = endingData[finalTypeStr] || endingData.SUCCESS;
 
@@ -171,11 +168,14 @@ const EndingScene = ({ onRestart, forcedType }) => {
           <motion.div 
             key="credit"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-            style={{ width: '100%', height: '100%', display: 'flex', justifyContent: 'center', backgroundColor: '#000' }}
+            style={{ width: '100%', height: '100%', display: 'flex', justifyContent: 'center', backgroundColor: '#000', position: 'relative' }}
           >
+            {/* 💡 [수정] 스크롤 도착점(y)을 -1100으로 더 위로 끌어올렸습니다. */}
             <motion.div 
-              initial={{ y: 720 }} animate={{ y: -1200 }} transition={{ duration: 15, ease: "linear" }}
-              style={{ textAlign: 'center', paddingTop: '100px' }}
+              initial={{ y: 720 }} 
+              animate={{ y: -1150 }} 
+              transition={{ duration: 15, ease: "linear" }}
+              style={{ textAlign: 'center', paddingTop: '100px', width: '100%' }}
             >
               <h1 style={{ fontSize: '64px', marginBottom: '100px', color: currentEnding.color }}>
                 {currentEnding.title}
@@ -203,10 +203,13 @@ const EndingScene = ({ onRestart, forcedType }) => {
               <p style={{ fontSize: '24px', marginBottom: '50px' }}>
                 SSAFY & Instructors
               </p>
-              <p style={{ fontSize: '24px', marginBottom: '400px' }}>
+
+              {/* 💡 [핵심 수정] And You~ 와 THANK YOU 사이에 500px의 거대한 공백을 주어 독무대를 만듭니다! */}
+              <p style={{ fontSize: '24px', marginBottom: '500px' }}>
                 And You, The Investor
               </p>
 
+              {/* 💡 이 문구만 정중앙에 남게 됩니다! */}
               <h1 style={{ fontSize: '48px' }}>
                 THANK YOU FOR PLAYING STACK&STOCK
               </h1>
@@ -214,7 +217,7 @@ const EndingScene = ({ onRestart, forcedType }) => {
             
             <button 
               className="pixel-btn" 
-              style={{ position: 'absolute', bottom: '50px', left: '50%', transform: 'translateX(-50%)' }}
+              style={{ position: 'absolute', bottom: '50px', left: '50%', transform: 'translateX(-50%)', zIndex: 100 }}
               onClick={onRestart}
             >
               다시 시작하기
@@ -226,4 +229,4 @@ const EndingScene = ({ onRestart, forcedType }) => {
   );
 };
 
-export default EndingScene;
+export default EndingScene; 
