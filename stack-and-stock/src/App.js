@@ -52,6 +52,7 @@ function App() {
   };
 
   const checkSessionAndNavigate = async () => {
+    /*
     try {
       const res = await fetch(`${API_BASE_URL}/api/users/me`, {
         method: 'GET', credentials: 'include', 
@@ -64,6 +65,16 @@ function App() {
     } catch (error) {
       setScene('AUTH');
     }
+    */
+
+    // 💡 [테스트용] 가짜 유저 데이터를 만들어서 강제 로그인!
+    const dummyUser = {
+      id: 999,
+      nickname: "테스터(재봉)", // 원하는 이름으로!
+      canContinue: false // 이어하기 버튼을 활성화하고 싶다면 true로 변경
+    };
+    login(dummyUser); // 스토어에 유저 정보 저장
+    setScene('MAIN'); // 바로 메인 씬으로 이동
   };
 
   const handleLogout = async () => {
